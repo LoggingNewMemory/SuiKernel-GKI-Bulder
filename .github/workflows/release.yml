@@ -27,6 +27,7 @@ jobs:
       LAST_BUILD: ${{ matrix.variant.LAST_BUILD }}
       BUILD_BOOTIMG: "false"
       TODO: "kernel"
+      BRANCH_CHOICE: "suikernel-stable"
 
   release:
     name: Create Unified Release

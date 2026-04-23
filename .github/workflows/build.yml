@@ -17,6 +17,9 @@ on:
       STATUS:
         type: string
         default: 'BETA'
+      BRANCH_CHOICE:
+        type: string
+        default: 'suikernel-stable'
 
   workflow_dispatch:
     inputs:
@@ -42,6 +45,14 @@ on:
         type: choice
         options:
           - "Next"
+      
+      BRANCH_CHOICE:
+        description: Target Kernel Branch
+        default: "suikernel-stable"
+        type: choice
+        options:
+          - "suikernel-stable"
+          - "suikernel-experimental"
 
 jobs:
   build:
@@ -100,6 +111,7 @@ jobs:
           LAST_BUILD: ${{ inputs.LAST_BUILD }}
           TODO: ${{ inputs.TODO }}
           STATUS: ${{ inputs.STATUS }}
+          KERNEL_BRANCH_ENV: ${{ inputs.BRANCH_CHOICE }}
         run: |
           export GIT_CLONE_PROTECTION_ACTIVE=false
           chmod +x *.sh

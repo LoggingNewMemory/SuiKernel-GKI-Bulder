@@ -23,13 +23,9 @@ LINUX_VERSION=$(make kernelversion)
 DEFCONFIG_FILE=$(find ./arch/arm64/configs -name "$KERNEL_DEFCONFIG")
 cd $workdir
 
-# # Set KernelSU Variant
+# Set KernelSU Variant
 log "Setting KernelSU variant..."
 VARIANT="KSUN"
-
-# Replace Placeholder in zip name
-ZIP_NAME=${ZIP_NAME//KVER/$LINUX_VERSION}
-ZIP_NAME=${ZIP_NAME//VARIANT/$VARIANT}
 
 # Download Clang
 CLANG_DIR="$workdir/clang"
@@ -93,15 +89,22 @@ config --disable CONFIG_KSU_SUSFS
 # ---
 log "🧹 Finalizing build configuration with branding..."
 
-# Get the GitHub Release Tag, using HSKY4 as a fallback for local builds
-RELEASE_TAG="${GITHUB_REF_NAME:-HSKY4}"
+# Determine branch type for the name
+if [[ "$KERNEL_BRANCH" == "suikernel-experimental" ]]; then
+    BRANCH_TAG="Experimental"
+elif [[ "$KERNEL_BRANCH" == "suikernel-stable" ]]; then
+    BRANCH_TAG="Stable"
+else
+    BRANCH_TAG="Dev" # Fallback if another branch is used
+fi
 
-# This sets the string that is appended to the base kernel version for `uname -r`
-INTERNAL_BRAND="-${KERNEL_NAME}-${RELEASE_TAG}-${VARIANT}"
+# This sets the string appended to the base kernel version for `uname -r`
+# Format Example: -SuiKernel-Experimental-KSUN
+INTERNAL_BRAND="-${KERNEL_NAME}-${BRANCH_TAG}-${VARIANT}"
 
-# This defines the user-facing name for the zip file and installer string
-export KERNEL_RELEASE_NAME="${KERNEL_NAME}-${RELEASE_TAG}-${LINUX_VERSION}-${VARIANT}"
-
+# This defines the full user-facing name for zips and AnyKernel
+# Format Example: 5.10.252-SuiKernel-Experimental-KSUN
+export KERNEL_RELEASE_NAME="${LINUX_VERSION}${INTERNAL_BRAND}"
 
 # Apply branding-specific modifications from your snippet
 if [ -f "./common/build.config.gki" ]; then
@@ -112,8 +115,7 @@ fi
 # Set the kernel's local version for uname -r and disable auto-generation
 config --set-str CONFIG_LOCALVERSION "$INTERNAL_BRAND"
 config --disable CONFIG_LOCALVERSION_AUTO
-log "✅ Internal kernel version set to: ${LINUX_VERSION}${INTERNAL_BRAND}"
-log "✅ User-facing release name set to: $KERNEL_RELEASE_NAME"
+log "✅ Internal kernel version set to: ${KERNEL_RELEASE_NAME}"
 
 
 # Declare needed variables
@@ -129,6 +131,7 @@ text=$(
   cat << EOF
 *==== SuiKernel Builder ====*
 🐧 *Linux Version*: $LINUX_VERSION
+📛 *Branch*: $BRANCH_TAG
 📅 *Build Date*: $KBUILD_BUILD_TIMESTAMP
 📛 *KernelSU*: ${KSU} | $KSU_VERSION
 🔰 *Compiler*: $COMPILER_STRING
@@ -169,12 +172,14 @@ git clone -q --depth=1 $ANYKERNEL_REPO -b $ANYKERNEL_BRANCH anykernel
 # Set kernel string in anykernel
 if [[ $STATUS == "BETA" ]]; then
   BUILD_DATE=$(date -d "$KBUILD_BUILD_TIMESTAMP" +"%Y%m%d-%H%M")
-  ZIP_NAME=${ZIP_NAME//BUILD_DATE/$BUILD_DATE}
+  # Appends the date to the BETA zip
+  ZIP_NAME="${KERNEL_RELEASE_NAME}-${BUILD_DATE}.zip"
   sed -i \
     "s/kernel.string=.*/kernel.string=${KERNEL_RELEASE_NAME} (${BUILD_DATE})/g" \
     $workdir/anykernel/anykernel.sh
 else
-  ZIP_NAME=${ZIP_NAME//-BUILD_DATE/}
+  # Clean name for Stable/Release zips
+  ZIP_NAME="${KERNEL_RELEASE_NAME}.zip"
   sed -i \
     "s/kernel.string=.*/kernel.string=${KERNEL_RELEASE_NAME}/g" \
     $workdir/anykernel/anykernel.sh
@@ -187,12 +192,10 @@ cp $KERNEL_IMAGE .
 zip -r9 $workdir/$ZIP_NAME ./*
 cd -
 
-# Logic for generating BootIMG removed.
-
 if [[ $STATUS != "BETA" ]]; then
   echo "BASE_NAME=$KERNEL_NAME-$VARIANT" >> $GITHUB_ENV
   mkdir -p $workdir/artifacts
-  # Only move zips, removed logic for moving .img
+  # Only move zips
   mv $workdir/*.zip $workdir/artifacts
 fi
 
@@ -209,7 +212,6 @@ if [[ $STATUS == "BETA" ]]; then
   reply_file "$MESSAGE_ID" "$workdir/$ZIP_NAME"
   reply_file "$MESSAGE_ID" "$workdir/build.log"
 else
-  # Modified: Don't reply here. The workflow will send the artifact link.
   log "✅ Build Succeeded. Artifact link will be sent by GitHub Action."
 fi
 
