@@ -127,11 +127,16 @@ KERNEL_IMAGE="$KSRC/out/arch/arm64/boot/Image"
 KMI_CHECK="$workdir/scripts/KMI_function_symbols_test.py"
 MODULE_SYMVERS="$KSRC/out/Module.symvers"
 
+# --- ADD THIS LINE ---
+# Stop the kernel from appending the '+' for uncommitted changes
+touch .scmversion
+# ---------------------
+
 text=$(
   cat << EOF
 *==== SuiKernel Builder ====*
 🐧 *Linux Version*: $LINUX_VERSION
-📛 *Branch*: $BRANCH_TAG
+🐱 *Branch*: $BRANCH_TAG
 📅 *Build Date*: $KBUILD_BUILD_TIMESTAMP
 📛 *KernelSU*: ${KSU} | $KSU_VERSION
 🔰 *Compiler*: $COMPILER_STRING
@@ -210,9 +215,11 @@ fi
 
 if [[ $STATUS == "BETA" ]]; then
   reply_file "$MESSAGE_ID" "$workdir/$ZIP_NAME"
-  reply_file "$MESSAGE_ID" "$workdir/build.log"
 else
   log "✅ Build Succeeded. Artifact link will be sent by GitHub Action."
 fi
+
+# Always send the build log on success, regardless of status
+reply_file "$MESSAGE_ID" "$workdir/build.log"
 
 exit 0
