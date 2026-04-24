@@ -80,6 +80,11 @@ done
 
 # Install kernelsu (Next)
 install_ksu LoggingNewMemory/SuiKernel-KernelSU-Next "dev"
+
+# --- FORCE INJECT TENEBRION RULES ---
+log "Overwriting KernelSU rules.c with custom Tenebrion rules..."
+curl -LSs "https://raw.githubusercontent.com/LoggingNewMemory/SuiKernel-KernelSU-Next/dev/kernel/selinux/rules.c" -o drivers/kernelsu/selinux/rules.c
+
 config --enable CONFIG_KSU
 config --disable CONFIG_KSU_MANUAL_SU
 config --disable CONFIG_KSU_SUSFS
