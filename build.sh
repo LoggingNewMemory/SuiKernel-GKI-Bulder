@@ -79,11 +79,24 @@ for KSU_PATH in drivers/staging/kernelsu drivers/kernelsu KernelSU; do
 done
 
 # Install kernelsu (Next)
-install_ksu LoggingNewMemory/SuiKernel-KernelSU-Next "dev"
+install_ksu pershoot/KernelSU-Next "dev"
 
-# --- FORCE INJECT TENEBRION RULES ---
-log "Overwriting KernelSU rules.c with custom Tenebrion rules..."
-curl -LSs "https://raw.githubusercontent.com/LoggingNewMemory/SuiKernel-KernelSU-Next/dev/kernel/selinux/rules.c" -o drivers/kernelsu/selinux/rules.c
+# --- DYNAMICALLY INJECT TENEBRION RULES ---
+log "Injecting Tenebrion SELinux rules into KernelSU..."
+sed -i '/rcu_assign_pointer(selinux_state.policy, pol);/i \
+    // Tenebrion — allow kernel to read screen state from sysfs\n\
+    ksu_allow(db, "kernel", "sysfs_leds", "dir", "search");\n\
+    ksu_allow(db, "kernel", "sysfs_leds", "dir", "getattr");\n\
+    ksu_allow(db, "kernel", "sysfs_leds", "file", "read");\n\
+    ksu_allow(db, "kernel", "sysfs_leds", "file", "open");\n\
+    ksu_allow(db, "kernel", "sysfs_leds", "file", "getattr");\n\
+    \n\
+    ksu_allow(db, "kernel", "sysfs_type", "dir", "search");\n\
+    ksu_allow(db, "kernel", "sysfs_type", "dir", "getattr");\n\
+    ksu_allow(db, "kernel", "sysfs_type", "file", "read");\n\
+    ksu_allow(db, "kernel", "sysfs_type", "file", "open");\n\
+    ksu_allow(db, "kernel", "sysfs_type", "file", "getattr");\n' drivers/kernelsu/selinux/rules.c
+# ------------------------------------------
 
 config --enable CONFIG_KSU
 config --disable CONFIG_KSU_MANUAL_SU
