@@ -10,6 +10,7 @@ on:
         options:
           - 'self-hosted'
           - 'ubuntu-latest'
+          - 'server-hive'
 
 jobs:
   build:

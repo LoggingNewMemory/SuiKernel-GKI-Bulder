@@ -30,6 +30,7 @@ on:
         options:
           - "self-hosted"
           - "ubuntu-latest"
+          - "server-hive"
 
       TODO:
         description: To do
@@ -92,6 +93,7 @@ jobs:
           fi
 
       - name: Install Dependencies
+        if: inputs.RUNNER_TYPE != 'server-hive'
         run: |
           export MAN_DISABLE=true
           sudo rm -f /etc/apt/sources.list.d/yarn.list
