@@ -81,8 +81,8 @@ done
 # Install kernelsu (Next)
 install_ksu pershoot/KernelSU-Next "dev"
 
-# --- DYNAMICALLY INJECT TENEBRION RULES ---
-log "Injecting Tenebrion SELinux rules into KernelSU..."
+# --- DYNAMICALLY INJECT TENEBRION & ANYA THERMAL RULES ---
+log "Injecting Tenebrion and Anya Thermal SELinux rules into KernelSU..."
 sed -i '/rcu_assign_pointer(selinux_state.policy, pol);/i \
     // Tenebrion — allow kernel to read screen state from sysfs\n\
     ksu_allow(db, "kernel", "sysfs_leds", "dir", "search");\n\
@@ -95,7 +95,13 @@ sed -i '/rcu_assign_pointer(selinux_state.policy, pol);/i \
     ksu_allow(db, "kernel", "sysfs_type", "dir", "getattr");\n\
     ksu_allow(db, "kernel", "sysfs_type", "file", "read");\n\
     ksu_allow(db, "kernel", "sysfs_type", "file", "open");\n\
-    ksu_allow(db, "kernel", "sysfs_type", "file", "getattr");\n' drivers/kernelsu/selinux/rules.c
+    ksu_allow(db, "kernel", "sysfs_type", "file", "getattr");\n\
+    \n\
+    // Anya Thermal — allow kernel to write thermal zone mode\n\
+    ksu_allow(db, "kernel", "sysfs_therm", "dir", "search");\n\
+    ksu_allow(db, "kernel", "sysfs_therm", "file", "read");\n\
+    ksu_allow(db, "kernel", "sysfs_therm", "file", "write");\n\
+    ksu_allow(db, "kernel", "sysfs_therm", "file", "open");\n' drivers/kernelsu/selinux/rules.c
 # ------------------------------------------
 
 config --enable CONFIG_KSU
