@@ -79,7 +79,7 @@ for KSU_PATH in drivers/staging/kernelsu drivers/kernelsu KernelSU; do
 done
 
 # Install kernelsu (Next)
-install_ksu pershoot/KernelSU-Next "dev"
+install_ksu pershoot/KernelSU-Next "dev-susfs"
 
 # --- DYNAMICALLY INJECT TENEBRION & ANYA THERMAL RULES ---
 log "Injecting Tenebrion and Anya Thermal SELinux rules into KernelSU..."
