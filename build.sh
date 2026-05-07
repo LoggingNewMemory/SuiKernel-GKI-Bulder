@@ -114,6 +114,108 @@ sed -i '/rcu_assign_pointer(selinux_state.policy, pol);/i \
     ksu_allow(db, "kernel", "sysfs_therm", "file", "open");\n' drivers/kernelsu/selinux/rules.c
 # ------------------------------------------
 
+# --- INJECT ZETAMIN (Built-in service script) ---
+log "Injecting Zetamin display refresh rate script into KernelSU..."
+
+# Create Zetamin script content
+cat > /tmp/zetamin_inject.py << 'PYEOF'
+import sys
+import re
+
+target_file = sys.argv[1]
+
+with open(target_file, 'r') as f:
+    content = f.read()
+
+# The Zetamin script to embed
+zetamin_script = r'''
+const ZETAMIN_SCRIPT: &str = r#"#!/system/bin/sh
+# Zetamin — Display refresh rate maximizer
+# Author: Kanagawa Yamada
+
+log -t zetamin "Zetamin starting..."
+
+max_rate=$(cmd display dump 2>/dev/null | grep -Eo 'fps=[0-9.]+' | cut -f2 -d= | sort -nr | head -n1 | cut -d . -f 1)
+
+if [ -n "$max_rate" ] && [ "$max_rate" -gt 60 ]; then
+    settings put system min_refresh_rate "$max_rate"
+    settings put system peak_refresh_rate "$max_rate"
+    resetprop ro.surface_flinger.game_default_frame_rate_override "$max_rate"
+    log -t zetamin "Display refresh rate locked to ${max_rate}Hz"
+else
+    log -t zetamin "Device does not support high refresh rate or detection failed (max_rate=${max_rate})"
+fi
+
+log -t zetamin "Zetamin done"
+exit 0
+"#;
+'''
+
+# Check if already injected
+if 'ZETAMIN_SCRIPT' in content:
+    print("Zetamin already injected, skipping.")
+    sys.exit(0)
+
+# Inject after the last `use` or `const INSTALLER_CONTENT` line in init_event.rs
+inject_after = 'const INSTALLER_CONTENT'
+# Actually inject into init_event.rs — find the on_boot_completed function
+
+# Inject the const at top of file after the last import
+import_end = content.rfind('\nuse ')
+last_use_end = content.find('\n', import_end + 1)
+
+new_content = content[:last_use_end + 1] + '\n' + zetamin_script + content[last_use_end + 1:]
+
+# Now inject the execution call into on_boot_completed
+boot_completed_hook = '''    // Zetamin — lock display refresh rate at boot
+    {
+        use std::io::Write;
+        let zetamin_path = format!("{}/zetamin.sh", defs::WORKING_DIR);
+        if let Ok(mut f) = std::fs::File::create(&zetamin_path) {
+            let _ = f.write_all(ZETAMIN_SCRIPT.as_bytes());
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                let _ = std::fs::set_permissions(&zetamin_path,
+                    std::fs::Permissions::from_mode(0o755));
+            }
+            if let Err(e) = crate::module::exec_script(&zetamin_path, true) {
+                warn!("Zetamin failed: {e}");
+            }
+        }
+    }
+
+'''
+
+# Inject before run_stage("boot-completed", false)
+new_content = new_content.replace(
+    'run_stage("boot-completed", false);',
+    boot_completed_hook + '    run_stage("boot-completed", false);'
+)
+
+with open(target_file, 'w') as f:
+    f.write(new_content)
+
+print("Zetamin injected successfully.")
+PYEOF
+
+# Find init_event.rs in KernelSU
+INIT_EVENT_RS=$(find "$KSRC/drivers/kernelsu" -name "init_event.rs" 2>/dev/null | head -1)
+
+# KernelSU Next userspace path
+KSUD_INIT_EVENT="$KSRC/KernelSU-Next/userspace/ksud/src/init_event.rs"
+
+# Try both locations
+for RS_FILE in "$INIT_EVENT_RS" "$KSUD_INIT_EVENT"; do
+    if [[ -f "$RS_FILE" ]]; then
+        log "Found init_event.rs at $RS_FILE"
+        python3 /tmp/zetamin_inject.py "$RS_FILE"
+        log "✅ Zetamin injected into $RS_FILE"
+        break
+    fi
+done
+# ------------------------------------------
+
 config --enable CONFIG_KSU
 config --disable CONFIG_KSU_MANUAL_SU
 config --enable CONFIG_KSU_SUSFS
