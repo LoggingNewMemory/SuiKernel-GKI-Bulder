@@ -91,8 +91,8 @@ cp -R "$SUSFS_PATCHES"/include/* ./include/
 patch -p1 < "$SUSFS_PATCHES"/50_add_susfs_in_gki-android12-5.10.patch
 # -----------------------
 
-# --- DYNAMICALLY INJECT TENEBRION & ANYA THERMAL RULES ---
-log "Injecting Tenebrion and Anya Thermal SELinux rules into KernelSU..."
+# --- DYNAMICALLY INJECT TENEBRION, ANYA THERMAL & NTSYNC RULES ---
+log "Injecting Tenebrion, Anya Thermal, and NTSYNC SELinux rules into KernelSU..."
 sed -i '/rcu_assign_pointer(selinux_state.policy, pol);/i \
     // Tenebrion — allow kernel to read screen state from sysfs\n\
     ksu_allow(db, "kernel", "sysfs_leds", "dir", "search");\n\
@@ -111,7 +111,20 @@ sed -i '/rcu_assign_pointer(selinux_state.policy, pol);/i \
     ksu_allow(db, "kernel", "sysfs_therm", "dir", "search");\n\
     ksu_allow(db, "kernel", "sysfs_therm", "file", "read");\n\
     ksu_allow(db, "kernel", "sysfs_therm", "file", "write");\n\
-    ksu_allow(db, "kernel", "sysfs_therm", "file", "open");\n' drivers/kernelsu/selinux/rules.c
+    ksu_allow(db, "kernel", "sysfs_therm", "file", "open");\n\
+    \n\
+    // NTSYNC SEPol — Allow kernel background worker to auto-chmod and spoof as gpu_device\n\
+    ksu_allow(db, "kernel", "device", "chr_file", "setattr");\n\
+    ksu_allow(db, "kernel", "device", "chr_file", "relabelfrom");\n\
+    ksu_allow(db, "kernel", "gpu_device", "chr_file", "relabelto");\n\
+    ksu_allow(db, "kernel", "gpu_device", "chr_file", "setattr");\n\
+    \n\
+    // NTSYNC SEPol — Explicitly allow Winlator to RW the spoofed device\n\
+    ksu_allow(db, "untrusted_app", "gpu_device", "chr_file", "read");\n\
+    ksu_allow(db, "untrusted_app", "gpu_device", "chr_file", "write");\n\
+    ksu_allow(db, "untrusted_app", "gpu_device", "chr_file", "open");\n\
+    ksu_allow(db, "untrusted_app", "gpu_device", "chr_file", "ioctl");\n\
+    ksu_allow(db, "untrusted_app", "gpu_device", "chr_file", "map");\n' drivers/kernelsu/selinux/rules.c
 # ------------------------------------------
 
 config --enable CONFIG_KSU
