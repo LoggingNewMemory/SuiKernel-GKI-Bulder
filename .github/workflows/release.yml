@@ -19,10 +19,6 @@ on:
         description: 'Link for Spoofed KernelSU Next Manager APK'
         required: true
         type: string
-      CHANGELOGS:
-        description: 'Enter the changelogs for this release'
-        required: true
-        type: string
 
 jobs:
   build:
@@ -160,7 +156,7 @@ jobs:
             Spoofed: ${{ inputs.MANAGER_SPOOFED }}
 
             ### 📝 Changelogs
-            ${{ inputs.CHANGELOGS }}
+            *(Edit this release to add changelogs)*
 
             #### ✍️ Notes
             -> This kernel only for GKI android12-5.10 device
