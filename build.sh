@@ -257,6 +257,7 @@ if [[ $LAST_BUILD == "true" && $STATUS != "BETA" ]]; then
     echo "KSU_NEXT_VERSION=$(gh api repos/KernelSU-Next/KernelSU-Next/tags --jq '.[0].name')"
     echo "KERNEL_NAME=$KERNEL_NAME"
     echo "RELEASE_REPO=$(simplify_gh_url "$GKI_RELEASES_REPO")"
+    echo "COMPILER_STRING=$COMPILER_STRING"
   ) >> $workdir/artifacts/info.txt
 fi
 
