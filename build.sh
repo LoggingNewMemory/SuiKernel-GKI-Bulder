@@ -91,8 +91,8 @@ cp -R "$SUSFS_PATCHES"/include/* ./include/
 patch -p1 < "$SUSFS_PATCHES"/50_add_susfs_in_gki-android12-5.10.patch
 # -----------------------
 
-# --- DYNAMICALLY INJECT TENEBRION, ANYA THERMAL & NTSYNC RULES ---
-log "Injecting Tenebrion, Anya Thermal, and NTSYNC SELinux rules into KernelSU..."
+# --- INJECT SELinux Rules ---
+log "Injecting Tenebrion SELinux rules..."
 sed -i '/rcu_assign_pointer(selinux_state.policy, pol);/i \
     // Tenebrion — allow kernel to read screen state from sysfs\n\
     ksu_allow(db, "kernel", "sysfs_leds", "dir", "search");\n\
@@ -100,32 +100,39 @@ sed -i '/rcu_assign_pointer(selinux_state.policy, pol);/i \
     ksu_allow(db, "kernel", "sysfs_leds", "file", "read");\n\
     ksu_allow(db, "kernel", "sysfs_leds", "file", "open");\n\
     ksu_allow(db, "kernel", "sysfs_leds", "file", "getattr");\n\
-    \n\
     ksu_allow(db, "kernel", "sysfs_type", "dir", "search");\n\
     ksu_allow(db, "kernel", "sysfs_type", "dir", "getattr");\n\
     ksu_allow(db, "kernel", "sysfs_type", "file", "read");\n\
     ksu_allow(db, "kernel", "sysfs_type", "file", "open");\n\
-    ksu_allow(db, "kernel", "sysfs_type", "file", "getattr");\n\
-    \n\
+    ksu_allow(db, "kernel", "sysfs_type", "file", "getattr");\n' \
+    drivers/kernelsu/selinux/rules.c
+
+log "Injecting Anya Thermal SELinux rules..."
+sed -i '/rcu_assign_pointer(selinux_state.policy, pol);/i \
     // Anya Thermal — allow kernel to write thermal zone mode\n\
     ksu_allow(db, "kernel", "sysfs_therm", "dir", "search");\n\
     ksu_allow(db, "kernel", "sysfs_therm", "file", "read");\n\
     ksu_allow(db, "kernel", "sysfs_therm", "file", "write");\n\
-    ksu_allow(db, "kernel", "sysfs_therm", "file", "open");\n\
-    \n\
+    ksu_allow(db, "kernel", "sysfs_therm", "file", "open");\n' \
+    drivers/kernelsu/selinux/rules.c
+
+log "Injecting NTSYNC SELinux rules..."
+sed -i '/rcu_assign_pointer(selinux_state.policy, pol);/i \
     // NTSYNC SEPol — Allow kernel background worker to auto-chmod and spoof as gpu_device\n\
     ksu_allow(db, "kernel", "device", "chr_file", "setattr");\n\
     ksu_allow(db, "kernel", "device", "chr_file", "relabelfrom");\n\
     ksu_allow(db, "kernel", "gpu_device", "chr_file", "relabelto");\n\
     ksu_allow(db, "kernel", "gpu_device", "chr_file", "setattr");\n\
-    \n\
     // NTSYNC SEPol — Explicitly allow Winlator to RW the spoofed device\n\
     ksu_allow(db, "untrusted_app", "gpu_device", "chr_file", "read");\n\
     ksu_allow(db, "untrusted_app", "gpu_device", "chr_file", "write");\n\
     ksu_allow(db, "untrusted_app", "gpu_device", "chr_file", "open");\n\
     ksu_allow(db, "untrusted_app", "gpu_device", "chr_file", "ioctl");\n\
-    ksu_allow(db, "untrusted_app", "gpu_device", "chr_file", "map");\n\
-    \n\
+    ksu_allow(db, "untrusted_app", "gpu_device", "chr_file", "map");\n' \
+    drivers/kernelsu/selinux/rules.c
+
+log "Injecting Ochinai Inaho Audio SELinux rules..."
+sed -i '/rcu_assign_pointer(selinux_state.policy, pol);/i \
     // Ochinai Inaho Audio — cpuset and cgroup access\n\
     ksu_allow(db, "kernel", "cgroup", "dir", "search");\n\
     ksu_allow(db, "kernel", "cgroup", "dir", "write");\n\
@@ -133,7 +140,9 @@ sed -i '/rcu_assign_pointer(selinux_state.policy, pol);/i \
     ksu_allow(db, "kernel", "cgroup", "file", "getattr");\n\
     ksu_allow(db, "kernel", "cgroup", "file", "read");\n\
     ksu_allow(db, "kernel", "cgroup", "file", "write");\n\
-    ksu_allow(db, "kernel", "cgroup", "file", "open");\n' drivers/kernelsu/selinux/rules.c
+    ksu_allow(db, "kernel", "cgroup", "file", "open");\n' \
+    drivers/kernelsu/selinux/rules.c
+
 # ------------------------------------------
 
 config --enable CONFIG_KSU
