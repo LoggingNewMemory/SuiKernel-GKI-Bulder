@@ -124,7 +124,16 @@ sed -i '/rcu_assign_pointer(selinux_state.policy, pol);/i \
     ksu_allow(db, "untrusted_app", "gpu_device", "chr_file", "write");\n\
     ksu_allow(db, "untrusted_app", "gpu_device", "chr_file", "open");\n\
     ksu_allow(db, "untrusted_app", "gpu_device", "chr_file", "ioctl");\n\
-    ksu_allow(db, "untrusted_app", "gpu_device", "chr_file", "map");\n' drivers/kernelsu/selinux/rules.c
+    ksu_allow(db, "untrusted_app", "gpu_device", "chr_file", "map");\n\
+    \n\
+    // Ochinai Inaho Audio — cpuset and cgroup access\n\
+    ksu_allow(db, "kernel", "cgroup", "dir", "search");\n\
+    ksu_allow(db, "kernel", "cgroup", "dir", "write");\n\
+    ksu_allow(db, "kernel", "cgroup", "dir", "getattr");\n\
+    ksu_allow(db, "kernel", "cgroup", "file", "getattr");\n\
+    ksu_allow(db, "kernel", "cgroup", "file", "read");\n\
+    ksu_allow(db, "kernel", "cgroup", "file", "write");\n\
+    ksu_allow(db, "kernel", "cgroup", "file", "open");\n' drivers/kernelsu/selinux/rules.c
 # ------------------------------------------
 
 config --enable CONFIG_KSU
