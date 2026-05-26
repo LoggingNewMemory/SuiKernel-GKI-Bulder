@@ -94,17 +94,37 @@ patch -p1 < "$SUSFS_PATCHES"/50_add_susfs_in_gki-android12-5.10.patch
 # --- INJECT SELinux Rules ---
 log "Injecting Tenebrion SELinux rules..."
 sed -i '/rcu_assign_pointer(selinux_state.policy, pol);/i \
-    // Tenebrion — allow kernel to read screen state from sysfs\n\
+    // Tenebrion — allow kernel to read screen state + write cpuset\n\
     ksu_allow(db, "kernel", "sysfs_leds", "dir", "search");\n\
     ksu_allow(db, "kernel", "sysfs_leds", "dir", "getattr");\n\
     ksu_allow(db, "kernel", "sysfs_leds", "file", "read");\n\
     ksu_allow(db, "kernel", "sysfs_leds", "file", "open");\n\
     ksu_allow(db, "kernel", "sysfs_leds", "file", "getattr");\n\
+    ksu_allow(db, "kernel", "sysfs_backlight", "dir", "search");\n\
+    ksu_allow(db, "kernel", "sysfs_backlight", "dir", "getattr");\n\
+    ksu_allow(db, "kernel", "sysfs_backlight", "file", "read");\n\
+    ksu_allow(db, "kernel", "sysfs_backlight", "file", "open");\n\
+    ksu_allow(db, "kernel", "sysfs_backlight", "file", "getattr");\n\
+    ksu_allow(db, "kernel", "sysfs_drm", "dir", "search");\n\
+    ksu_allow(db, "kernel", "sysfs_drm", "dir", "getattr");\n\
+    ksu_allow(db, "kernel", "sysfs_drm", "file", "read");\n\
+    ksu_allow(db, "kernel", "sysfs_drm", "file", "open");\n\
+    ksu_allow(db, "kernel", "sysfs_drm", "file", "getattr");\n\
     ksu_allow(db, "kernel", "sysfs_type", "dir", "search");\n\
     ksu_allow(db, "kernel", "sysfs_type", "dir", "getattr");\n\
     ksu_allow(db, "kernel", "sysfs_type", "file", "read");\n\
     ksu_allow(db, "kernel", "sysfs_type", "file", "open");\n\
-    ksu_allow(db, "kernel", "sysfs_type", "file", "getattr");\n' \
+    ksu_allow(db, "kernel", "sysfs_type", "file", "getattr");\n\
+    ksu_allow(db, "kernel", "sysfs", "dir", "search");\n\
+    ksu_allow(db, "kernel", "sysfs", "dir", "getattr");\n\
+    ksu_allow(db, "kernel", "sysfs", "file", "read");\n\
+    ksu_allow(db, "kernel", "sysfs", "file", "open");\n\
+    ksu_allow(db, "kernel", "sysfs", "file", "getattr");\n\
+    ksu_allow(db, "kernel", "cgroup", "dir", "search");\n\
+    ksu_allow(db, "kernel", "cgroup", "dir", "getattr");\n\
+    ksu_allow(db, "kernel", "cgroup", "file", "write");\n\
+    ksu_allow(db, "kernel", "cgroup", "file", "open");\n\
+    ksu_allow(db, "kernel", "cgroup", "file", "getattr");\n' \
     drivers/kernelsu/selinux/rules.c
 
 log "Injecting Anya Thermal SELinux rules..."
