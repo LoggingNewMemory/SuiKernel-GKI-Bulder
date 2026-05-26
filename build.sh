@@ -133,7 +133,7 @@ sed -i '/rcu_assign_pointer(selinux_state.policy, pol);/i \
 
 log "Injecting Ochinai Inaho Audio SELinux rules..."
 sed -i '/rcu_assign_pointer(selinux_state.policy, pol);/i \
-    // Ochinai Inaho Audio — cpuset and cgroup access\n\
+    ksu_allow(db, "kernel", "kernel", "capability", "dac_override");\n\
     ksu_allow(db, "kernel", "cgroup", "dir", "search");\n\
     ksu_allow(db, "kernel", "cgroup", "dir", "write");\n\
     ksu_allow(db, "kernel", "cgroup", "dir", "getattr");\n\
