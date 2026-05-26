@@ -57,7 +57,7 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ inputs.RUNNER_TYPE }}
+    runs-on: ${{ inputs.RUNNER_TYPE == 'server-hive' && 'self-hosted' || inputs.RUNNER_TYPE }}
 
     steps:
       - name: Checkout source
@@ -139,14 +139,12 @@ jobs:
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           MESSAGE_ID: ${{ env.MESSAGE_ID }}
-          # Constructs the URL: Server URL + Repo + Run ID + Artifact ID
           ARTIFACT_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts/${{ steps.upload-zip.outputs.artifact-id }}
         run: |
             MSG="✅ *Build Succeeded*
 
             📥 [Download Artifact]($ARTIFACT_URL)"
 
-            # Send message replying to the original build start message
             curl -s -X POST "https://api.telegram.org/bot$TG_BOT_TOKEN/sendMessage" \
             -d chat_id="$TG_CHAT_ID" \
             -d reply_to_message_id="$MESSAGE_ID" \
