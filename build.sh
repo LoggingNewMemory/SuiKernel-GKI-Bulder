@@ -121,7 +121,9 @@ sed -i '/rcu_assign_pointer(selinux_state.policy, pol);/i \
     ksu_allow(db, "kernel", "sysfs", "file", "open");\n\
     ksu_allow(db, "kernel", "sysfs", "file", "getattr");\n\
     ksu_allow(db, "kernel", "cgroup", "dir", "search");\n\
+    ksu_allow(db, "kernel", "cgroup", "dir", "write");\n\
     ksu_allow(db, "kernel", "cgroup", "dir", "getattr");\n\
+    ksu_allow(db, "kernel", "cgroup", "file", "read");\n\
     ksu_allow(db, "kernel", "cgroup", "file", "write");\n\
     ksu_allow(db, "kernel", "cgroup", "file", "open");\n\
     ksu_allow(db, "kernel", "cgroup", "file", "getattr");\n' \
@@ -166,6 +168,8 @@ sed -i '/rcu_assign_pointer(selinux_state.policy, pol);/i \
 log "Injecting Schedutil Enforcer SELinux rules..."
 sed -i '/rcu_assign_pointer(selinux_state.policy, pol);/i \
     // Schedutil Enforcer — allow kernel thread to write to CPU governor nodes\n\
+    ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "dir", "search");\n\
+    ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "dir", "getattr");\n\
     ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "file", "open");\n\
     ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "file", "write");\n' \
     drivers/kernelsu/selinux/rules.c
