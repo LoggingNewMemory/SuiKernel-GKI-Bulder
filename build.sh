@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 workdir=$(pwd)
 
+BUILD_START=$(date +%s)
+
 # Handle error
 set -e
 exec > >(tee $workdir/build.log) 2>&1
@@ -227,12 +229,13 @@ MODULE_SYMVERS="$KSRC/out/Module.symvers"
 touch .scmversion
 # ---------------------
 
+# --- KOBO CHANGED THE MSG TEMPLATE HERE ---
 text=$(
   cat << EOF
 *==== SuiKernel Builder ====*
 🐧 *Linux Version*: $LINUX_VERSION
 🐱 *Branch*: $BRANCH_TAG
-📅 *Build Date*: $KBUILD_BUILD_TIMESTAMP
+🖥️ *Runner*: $RUNNER_TYPE
 📛 *KernelSU*: ${KSU} | $KSU_VERSION
 🔰 *Compiler*: $COMPILER_STRING
 😸 *Kakangkuh*: 100
@@ -308,6 +311,12 @@ if [[ $LAST_BUILD == "true" && $STATUS != "BETA" ]]; then
     echo "COMPILER_STRING=$COMPILER_STRING"
   ) >> $workdir/artifacts/info.txt
 fi
+
+BUILD_END=$(date +%s)
+BUILD_DIFF=$((BUILD_END - BUILD_START))
+BUILD_MINS=$((BUILD_DIFF / 60))
+BUILD_SECS=$((BUILD_DIFF % 60))
+echo "BUILD_TIME=${BUILD_MINS}m ${BUILD_SECS}s" >> $GITHUB_ENV
 
 if [[ $STATUS == "BETA" ]]; then
   reply_file "$MESSAGE_ID" "$workdir/$ZIP_NAME"

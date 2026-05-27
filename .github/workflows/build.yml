@@ -114,6 +114,7 @@ jobs:
           TODO: ${{ inputs.TODO }}
           STATUS: ${{ inputs.STATUS }}
           KERNEL_BRANCH_ENV: ${{ inputs.BRANCH_CHOICE }}
+          RUNNER_TYPE: ${{ inputs.RUNNER_TYPE }}
         run: |
           export GIT_CLONE_PROTECTION_ACTIVE=false
           chmod +x *.sh
@@ -139,9 +140,11 @@ jobs:
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           MESSAGE_ID: ${{ env.MESSAGE_ID }}
+          BUILD_TIME: ${{ env.BUILD_TIME }}
           ARTIFACT_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts/${{ steps.upload-zip.outputs.artifact-id }}
         run: |
             MSG="✅ *Build Succeeded*
+            ⏱️ Time to Build: $BUILD_TIME
 
             📥 [Download Artifact]($ARTIFACT_URL)"
 
