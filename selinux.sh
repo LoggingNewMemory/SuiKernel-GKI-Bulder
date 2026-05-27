@@ -104,4 +104,16 @@ inject_selinux "Schedutil Enforcer" \
     ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "file", "open");\n\
     ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "file", "write");\n'
 
+# ---------------------------------------------------------------------------
+# Yamada Gaming Boost — allow kernel workqueue threads to read and write
+# ---------------------------------------------------------------------------
+inject_selinux "Yamada Gaming Boost" \
+    '    ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "dir", "search");\n\
+    ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "dir", "getattr");\n\
+    ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "file", "read");\n\
+    ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "file", "open");\n\
+    ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "file", "write");\n\
+    ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "file", "getattr");\n\
+    ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "file", "setattr");\n'
+
 log "✅ All SELinux rules injected successfully"
