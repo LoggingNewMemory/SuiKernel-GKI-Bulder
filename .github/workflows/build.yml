@@ -58,7 +58,7 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ inputs.RUNNER_TYPE == 'server-hive' && 'self-hosted' || inputs.RUNNER_TYPE }}
+    runs-on: ${{ (inputs.RUNNER_TYPE == 'server-hive' || inputs.RUNNER_TYPE == 'kaela-build') && 'self-hosted' || inputs.RUNNER_TYPE }}
 
     steps:
       - name: Checkout source
