@@ -95,13 +95,4 @@ inject_selinux "Ochinai Inaho Audio" \
     ksu_allow(db, "kernel", "cgroup", "file", "write");\n\
     ksu_allow(db, "kernel", "cgroup", "file", "open");\n'
 
-# ---------------------------------------------------------------------------
-# Schedutil Enforcer — allow kernel thread to write to CPU governor nodes
-# ---------------------------------------------------------------------------
-inject_selinux "Schedutil Enforcer" \
-    '    ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "dir", "search");\n\
-    ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "dir", "getattr");\n\
-    ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "file", "open");\n\
-    ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "file", "write");\n'
-
 log "✅ All SELinux rules injected successfully"
