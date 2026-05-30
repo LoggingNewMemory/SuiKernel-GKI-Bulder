@@ -11,6 +11,7 @@ on:
           - 'self-hosted'
           - 'ubuntu-latest'
           - 'server-hive'
+          - 'kaela-build'
       MANAGER_NORMAL:
         description: 'Link for Normal KernelSU Next Manager APK'
         required: true

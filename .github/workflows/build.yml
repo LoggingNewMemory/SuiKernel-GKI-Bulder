@@ -31,6 +31,7 @@ on:
           - "self-hosted"
           - "ubuntu-latest"
           - "server-hive"
+          - "kaela-build"
 
       TODO:
         description: To do
@@ -95,13 +96,18 @@ jobs:
       - name: Install Dependencies
         if: inputs.RUNNER_TYPE != 'server-hive'
         run: |
-          export MAN_DISABLE=true
-          sudo rm -f /etc/apt/sources.list.d/yarn.list
-          sudo apt update -y
-          sudo apt install -y bc cpio flex bison aptitude gh git python3 \
-                              tar perl wget curl lz4 zstd libarchive-tools aria2
-          sudo aptitude install -y libssl-dev
-          pip install lxml
+          if [ "${{ inputs.RUNNER_TYPE }}" == "kaela-build" ]; then
+            echo "Kaela: Installing Dependencies"
+            sudo pacman -Sy --noconfirm base-devel bc cpio flex bison github-cli git python tar perl wget curl lz4 zstd libarchive aria2 openssl python-pip python-lxml
+          else
+            export MAN_DISABLE=true
+            sudo rm -f /etc/apt/sources.list.d/yarn.list
+            sudo apt update -y
+            sudo apt install -y bc cpio flex bison aptitude gh git python3 \
+                                tar perl wget curl lz4 zstd libarchive-tools aria2
+            sudo aptitude install -y libssl-dev
+            pip install lxml
+          fi
 
       - name: Run Build Script
         env:
@@ -141,7 +147,7 @@ jobs:
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           MESSAGE_ID: ${{ env.MESSAGE_ID }}
           BUILD_TIME: ${{ env.BUILD_TIME }}
-          SUCCESS_STICKER: "CAACAgUAAxkBAAFKwcFqFp4Lc-G23l8LbCYSvG9GH84WrgAC0RgAAsMgYFdOfiL7ZJKFUDsE"
+          SUCCESS_STICKER: ${{ inputs.RUNNER_TYPE == 'kaela-build' && 'CAACAgUAAxkBAAFLC8VqGuTmmanejG3DSoR77JtN9o2UmAACNRcAAhCHEFSMRfHfKtoZxjsE' || 'CAACAgUAAxkBAAFKwcFqFp4Lc-G23l8LbCYSvG9GH84WrgAC0RgAAsMgYFdOfiL7ZJKFUDsE' }}
           ARTIFACT_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts/${{ steps.upload-zip.outputs.artifact-id }}
         run: |
             MSG="✅ *Build Succeeded*
@@ -169,7 +175,7 @@ jobs:
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           MESSAGE_ID: ${{ env.MESSAGE_ID }}
-          FAIL_STICKER: "CAACAgUAAxkBAAFKwb1qFp34bgajg3iXze7T62I9FC77DAAC4xYAArQkWVfE6uzpUzT2DzsE"
+          FAIL_STICKER: ${{ inputs.RUNNER_TYPE == 'kaela-build' && 'CAACAgUAAxkBAAFLC7BqGuST6OsQCa0qjTNX2lsmk31WcgACrBQAAiRx8VbO0FIQbj3hUTsE' || 'CAACAgUAAxkBAAFKwb1qFp34bgajg3iXze7T62I9FC77DAAC4xYAArQkWVfE6uzpUzT2DzsE' }}
         run: |
             # 1. Send the error message
             curl -s -X POST "https://api.telegram.org/bot$TG_BOT_TOKEN/sendMessage" \
