@@ -122,6 +122,7 @@ inject_selinux "Pavolia Reine Resetprop" \
     ksu_allow(db, "kernel", "su_exec", "file", "open");\n\
     ksu_allow(db, "kernel", "su_exec", "file", "getattr");\n\
     ksu_allow(db, "kernel", "su_exec", "file", "map");\n\
+    ksu_allow(db, "kernel", "adb_data_file", "dir", "search");\n\
     ksu_allow(db, "kernel", "adb_data_file", "file", "execute");\n\
     ksu_allow(db, "kernel", "adb_data_file", "file", "execute_no_trans");\n\
     ksu_allow(db, "kernel", "adb_data_file", "file", "read");\n\
