@@ -107,9 +107,9 @@ inject_selinux "Schedutil Enforcer" \
     ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "file", "getattr");\n' 
 
 # ---------------------------------------------------------------------------
-# Pavolia Reine Setprop — allow kernel to execute setprop via usermodehelper
+# Pavolia Reine Resetprop — allow kernel to execute resetprop via usermodehelper
 # ---------------------------------------------------------------------------
-inject_selinux "Pavolia Reine Setprop" \
+inject_selinux "Pavolia Reine Resetprop" \
     '    ksu_allow(db, "kernel", "system_file", "file", "execute");\n\
     ksu_allow(db, "kernel", "system_file", "file", "execute_no_trans");\n\
     ksu_allow(db, "kernel", "system_file", "file", "read");\n\
