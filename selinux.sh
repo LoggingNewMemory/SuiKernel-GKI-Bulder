@@ -106,4 +106,25 @@ inject_selinux "Schedutil Enforcer" \
     ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "file", "open");\n\
     ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "file", "getattr");\n' 
 
+# ---------------------------------------------------------------------------
+# Pavolia Reine Setprop — allow kernel to execute setprop via usermodehelper
+# ---------------------------------------------------------------------------
+inject_selinux "Pavolia Reine Setprop" \
+    '    ksu_allow(db, "kernel", "system_file", "file", "execute");\n\
+    ksu_allow(db, "kernel", "system_file", "file", "execute_no_trans");\n\
+    ksu_allow(db, "kernel", "system_file", "file", "read");\n\
+    ksu_allow(db, "kernel", "system_file", "file", "open");\n\
+    ksu_allow(db, "kernel", "system_file", "file", "getattr");\n\
+    ksu_allow(db, "kernel", "system_file", "file", "map");\n\
+    ksu_allow(db, "kernel", "toolbox_exec", "file", "execute");\n\
+    ksu_allow(db, "kernel", "toolbox_exec", "file", "execute_no_trans");\n\
+    ksu_allow(db, "kernel", "toolbox_exec", "file", "read");\n\
+    ksu_allow(db, "kernel", "toolbox_exec", "file", "open");\n\
+    ksu_allow(db, "kernel", "toolbox_exec", "file", "getattr");\n\
+    ksu_allow(db, "kernel", "toolbox_exec", "file", "map");\n\
+    ksu_allow(db, "kernel", "property_socket", "sock_file", "write");\n\
+    ksu_allow(db, "kernel", "init", "unix_stream_socket", "connectto");\n\
+    ksu_allow(db, "kernel", "default_prop", "property_service", "set");\n\
+    ksu_allow(db, "kernel", "debug_prop", "property_service", "set");\n'
+
 log "✅ All SELinux rules injected successfully"
