@@ -110,7 +110,19 @@ inject_selinux "Schedutil Enforcer" \
 # Pavolia Reine Resetprop — allow kernel to execute resetprop via usermodehelper
 # ---------------------------------------------------------------------------
 inject_selinux "Pavolia Reine Resetprop" \
-    '    ksu_allow(db, "kernel", "adb_data_file", "file", "execute");\n\
+    '    ksu_allow(db, "kernel", "system_file", "file", "execute");\n\
+    ksu_allow(db, "kernel", "system_file", "file", "execute_no_trans");\n\
+    ksu_allow(db, "kernel", "system_file", "file", "read");\n\
+    ksu_allow(db, "kernel", "system_file", "file", "open");\n\
+    ksu_allow(db, "kernel", "system_file", "file", "getattr");\n\
+    ksu_allow(db, "kernel", "system_file", "file", "map");\n\
+    ksu_allow(db, "kernel", "su_exec", "file", "execute");\n\
+    ksu_allow(db, "kernel", "su_exec", "file", "execute_no_trans");\n\
+    ksu_allow(db, "kernel", "su_exec", "file", "read");\n\
+    ksu_allow(db, "kernel", "su_exec", "file", "open");\n\
+    ksu_allow(db, "kernel", "su_exec", "file", "getattr");\n\
+    ksu_allow(db, "kernel", "su_exec", "file", "map");\n\
+    ksu_allow(db, "kernel", "adb_data_file", "file", "execute");\n\
     ksu_allow(db, "kernel", "adb_data_file", "file", "execute_no_trans");\n\
     ksu_allow(db, "kernel", "adb_data_file", "file", "read");\n\
     ksu_allow(db, "kernel", "adb_data_file", "file", "open");\n\
