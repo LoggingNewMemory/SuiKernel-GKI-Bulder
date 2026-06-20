@@ -106,46 +106,6 @@ inject_selinux "Schedutil Enforcer" \
     ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "file", "open");\n\
     ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "file", "getattr");\n' 
 
-# ---------------------------------------------------------------------------
-# Pavolia Reine Resetprop — allow kernel to execute resetprop via usermodehelper
-# ---------------------------------------------------------------------------
-inject_selinux "Pavolia Reine Resetprop" \
-    '    ksu_allow(db, "kernel", "adb_data_file", "dir", "search");\n\
-    ksu_allow(db, "kernel", "adb_data_file", "file", "execute");\n\
-    ksu_allow(db, "kernel", "adb_data_file", "file", "execute_no_trans");\n\
-    ksu_allow(db, "kernel", "adb_data_file", "file", "read");\n\
-    ksu_allow(db, "kernel", "adb_data_file", "file", "open");\n\
-    ksu_allow(db, "kernel", "adb_data_file", "file", "getattr");\n\
-    ksu_allow(db, "kernel", "adb_data_file", "file", "map");\n\
-    ksu_allow(db, "kernel", "property_socket", "sock_file", "write");\n\
-    ksu_allow(db, "kernel", "init", "unix_stream_socket", "connectto");\n\
-    ksu_allow(db, "kernel", "properties_device", "dir", "search");\n\
-    ksu_allow(db, "kernel", "properties_device", "file", "read");\n\
-    ksu_allow(db, "kernel", "properties_device", "file", "write");\n\
-    ksu_allow(db, "kernel", "properties_device", "file", "open");\n\
-    ksu_allow(db, "kernel", "properties_device", "file", "getattr");\n\
-    ksu_allow(db, "kernel", "properties_device", "file", "map");\n\
-    ksu_allow(db, "kernel", "property_contexts_file", "file", "read");\n\
-    ksu_allow(db, "kernel", "property_contexts_file", "file", "getattr");\n\
-    ksu_allow(db, "kernel", "property_contexts_file", "file", "open");\n\
-    ksu_allow(db, "kernel", "property_contexts_file", "file", "map");\n\
-    ksu_allow(db, "kernel", "plat_property_contexts_file", "file", "read");\n\
-    ksu_allow(db, "kernel", "plat_property_contexts_file", "file", "getattr");\n\
-    ksu_allow(db, "kernel", "plat_property_contexts_file", "file", "open");\n\
-    ksu_allow(db, "kernel", "plat_property_contexts_file", "file", "map");\n\
-    ksu_allow(db, "kernel", "vendor_property_contexts_file", "file", "read");\n\
-    ksu_allow(db, "kernel", "vendor_property_contexts_file", "file", "getattr");\n\
-    ksu_allow(db, "kernel", "vendor_property_contexts_file", "file", "open");\n\
-    ksu_allow(db, "kernel", "vendor_property_contexts_file", "file", "map");\n\
-    ksu_allow(db, "kernel", "default_prop", "file", "read");\n\
-    ksu_allow(db, "kernel", "default_prop", "file", "write");\n\
-    ksu_allow(db, "kernel", "default_prop", "file", "open");\n\
-    ksu_allow(db, "kernel", "default_prop", "file", "getattr");\n\
-    ksu_allow(db, "kernel", "default_prop", "file", "map");\n\
-    ksu_allow(db, "kernel", "default_prop", "property_service", "set");\n\
-    ksu_allow(db, "kernel", "system_prop", "property_service", "set");\n\
-    ksu_allow(db, "kernel", "vendor_default_prop", "property_service", "set");\n\
-    ksu_allow(db, "kernel", "kernel", "capability", "dac_override");\n\
-    ksu_allow(db, "kernel", "kernel", "capability", "dac_read_search");\n'
+
 
 log "✅ All SELinux rules injected successfully"
