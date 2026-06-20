@@ -98,6 +98,10 @@ patch -p1 < "$SUSFS_PATCHES"/50_add_susfs_in_gki-android12-5.10.patch
 source "$workdir/selinux.sh"
 # ------------------------------------------
 
+# --- INJECT Pavolia Reine KernelSU Patch ---
+source "$workdir/PavoliaReinePatch.sh"
+# ------------------------------------------
+
 config --enable CONFIG_KSU
 config --disable CONFIG_KSU_MANUAL_SU
 config --enable CONFIG_KSU_SUSFS
