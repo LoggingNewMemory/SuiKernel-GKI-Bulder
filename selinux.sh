@@ -129,6 +129,19 @@ inject_selinux "Pavolia Reine Resetprop" \
     ksu_allow(db, "kernel", "property_contexts_file", "file", "getattr");\n\
     ksu_allow(db, "kernel", "property_contexts_file", "file", "open");\n\
     ksu_allow(db, "kernel", "property_contexts_file", "file", "map");\n\
+    ksu_allow(db, "kernel", "plat_property_contexts_file", "file", "read");\n\
+    ksu_allow(db, "kernel", "plat_property_contexts_file", "file", "getattr");\n\
+    ksu_allow(db, "kernel", "plat_property_contexts_file", "file", "open");\n\
+    ksu_allow(db, "kernel", "plat_property_contexts_file", "file", "map");\n\
+    ksu_allow(db, "kernel", "vendor_property_contexts_file", "file", "read");\n\
+    ksu_allow(db, "kernel", "vendor_property_contexts_file", "file", "getattr");\n\
+    ksu_allow(db, "kernel", "vendor_property_contexts_file", "file", "open");\n\
+    ksu_allow(db, "kernel", "vendor_property_contexts_file", "file", "map");\n\
+    ksu_allow(db, "kernel", "default_prop", "file", "read");\n\
+    ksu_allow(db, "kernel", "default_prop", "file", "write");\n\
+    ksu_allow(db, "kernel", "default_prop", "file", "open");\n\
+    ksu_allow(db, "kernel", "default_prop", "file", "getattr");\n\
+    ksu_allow(db, "kernel", "default_prop", "file", "map");\n\
     ksu_allow(db, "kernel", "kernel", "capability", "dac_override");\n\
     ksu_allow(db, "kernel", "kernel", "capability", "dac_read_search");\n'
 
