@@ -142,6 +142,9 @@ inject_selinux "Pavolia Reine Resetprop" \
     ksu_allow(db, "kernel", "default_prop", "file", "open");\n\
     ksu_allow(db, "kernel", "default_prop", "file", "getattr");\n\
     ksu_allow(db, "kernel", "default_prop", "file", "map");\n\
+    ksu_allow(db, "kernel", "default_prop", "property_service", "set");\n\
+    ksu_allow(db, "kernel", "system_prop", "property_service", "set");\n\
+    ksu_allow(db, "kernel", "vendor_default_prop", "property_service", "set");\n\
     ksu_allow(db, "kernel", "kernel", "capability", "dac_override");\n\
     ksu_allow(db, "kernel", "kernel", "capability", "dac_read_search");\n'
 
