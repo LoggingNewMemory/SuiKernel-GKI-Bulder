@@ -107,5 +107,23 @@ inject_selinux "Schedutil Enforcer" \
     ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "file", "getattr");\n' 
 
 
+# ---------------------------------------------------------------------------
+# Ayunda Risu Native Root Exec — allow kernel to execute shell/ksud as SU
+# ---------------------------------------------------------------------------
+inject_selinux "Ayunda Risu Native Root Exec" \
+    '    ksu_allow(db, "kernel", KERNEL_SU_DOMAIN, "process", "transition");\n\
+    ksu_allow(db, "kernel", "shell_exec", "file", "execute");\n\
+    ksu_allow(db, "kernel", "shell_exec", "file", "execute_no_trans");\n\
+    ksu_allow(db, "kernel", "shell_exec", "file", "read");\n\
+    ksu_allow(db, "kernel", "shell_exec", "file", "open");\n\
+    ksu_allow(db, "kernel", "shell_exec", "file", "getattr");\n\
+    ksu_allow(db, "kernel", "shell_exec", "file", "map");\n\
+    ksu_allow(db, "kernel", "adb_data_file", "dir", "search");\n\
+    ksu_allow(db, "kernel", "adb_data_file", "file", "execute");\n\
+    ksu_allow(db, "kernel", "adb_data_file", "file", "execute_no_trans");\n\
+    ksu_allow(db, "kernel", "adb_data_file", "file", "read");\n\
+    ksu_allow(db, "kernel", "adb_data_file", "file", "open");\n\
+    ksu_allow(db, "kernel", "adb_data_file", "file", "getattr");\n\
+    ksu_allow(db, "kernel", "adb_data_file", "file", "map");\n'
 
 log "✅ All SELinux rules injected successfully"
