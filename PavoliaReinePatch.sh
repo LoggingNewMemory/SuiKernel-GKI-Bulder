@@ -11,8 +11,14 @@ fi
 
 python3 - << 'EOF'
 import sys
+import os
 
-filepath = "drivers/kernelsu/kernel/runtime/ksud_integration.c"
+# drivers/kernelsu is a symlink to KernelSU-Next/kernel
+filepath = "drivers/kernelsu/runtime/ksud_integration.c"
+
+if not os.path.exists(filepath):
+    print(f"Error: {filepath} not found!", file=sys.stderr)
+    sys.exit(1)
 
 with open(filepath, "r") as f:
     content = f.read()
