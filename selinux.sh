@@ -99,22 +99,39 @@ inject_selinux "Schedutil Enforcer" \
 
 
 # ---------------------------------------------------------------------------
-# Ayunda Risu Native Root Exec — allow kernel to execute shell/ksud as SU
+# Ayunda Risu Native Root Exec — allow init to exec into the KernelSU domain
+#
+# The execution path is:
+#   init (RC stanza injected by KernelSU) → exec u:r:su:s0 root
+#       → /system/bin/sh -c "<cmd>"
+#
+# For this to work init needs:
+#   • transition    — to enter the su domain via exec
+#   • dyntransition — for setcon-style transitions init may use
+# The su domain (KERNEL_SU_DOMAIN) is already fully permissive per rules.c,
+# so no additional rules are needed there.
+#
+# We also keep kernel→shell_exec execute rules for the UMH fallback path in
+# ayunda_risu_native_root_exec.c (used post-boot when RC stream is closed).
 # ---------------------------------------------------------------------------
 inject_selinux "Ayunda Risu Native Root Exec" \
-    '    ksu_allow(db, "kernel", KERNEL_SU_DOMAIN, "process", "transition");\n\
+    '    ksu_allow(db, "init", KERNEL_SU_DOMAIN, "process", "transition");\n\
+    ksu_allow(db, "init", KERNEL_SU_DOMAIN, "process", "dyntransition");\n\
+    ksu_allow(db, "init", KERNEL_SU_DOMAIN, "process", "noatsecure");\n\
+    ksu_allow(db, "init", KERNEL_SU_FILE, "file", "execute");\n\
+    ksu_allow(db, "init", KERNEL_SU_FILE, "file", "read");\n\
+    ksu_allow(db, "init", KERNEL_SU_FILE, "file", "open");\n\
+    ksu_allow(db, "init", "shell_exec", "file", "execute");\n\
+    ksu_allow(db, "init", "shell_exec", "file", "execute_no_trans");\n\
+    ksu_allow(db, "init", "shell_exec", "file", "read");\n\
+    ksu_allow(db, "init", "shell_exec", "file", "open");\n\
+    ksu_allow(db, "init", "shell_exec", "file", "entrypoint");\n\
+    ksu_allow(db, "kernel", KERNEL_SU_DOMAIN, "process", "transition");\n\
     ksu_allow(db, "kernel", "shell_exec", "file", "execute");\n\
     ksu_allow(db, "kernel", "shell_exec", "file", "execute_no_trans");\n\
     ksu_allow(db, "kernel", "shell_exec", "file", "read");\n\
     ksu_allow(db, "kernel", "shell_exec", "file", "open");\n\
     ksu_allow(db, "kernel", "shell_exec", "file", "getattr");\n\
-    ksu_allow(db, "kernel", "shell_exec", "file", "map");\n\
-    ksu_allow(db, "kernel", "adb_data_file", "dir", "search");\n\
-    ksu_allow(db, "kernel", "adb_data_file", "file", "execute");\n\
-    ksu_allow(db, "kernel", "adb_data_file", "file", "execute_no_trans");\n\
-    ksu_allow(db, "kernel", "adb_data_file", "file", "read");\n\
-    ksu_allow(db, "kernel", "adb_data_file", "file", "open");\n\
-    ksu_allow(db, "kernel", "adb_data_file", "file", "getattr");\n\
-    ksu_allow(db, "kernel", "adb_data_file", "file", "map");\n'
+    ksu_allow(db, "kernel", "shell_exec", "file", "map");\n'
 
 log "✅ All SELinux rules injected successfully"

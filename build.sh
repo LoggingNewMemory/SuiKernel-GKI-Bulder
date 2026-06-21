@@ -102,6 +102,10 @@ source "$workdir/selinux.sh"
 source "$workdir/PavoliaReinePatch.sh"
 # ------------------------------------------
 
+# --- INJECT Ayunda Risu KernelSU Exec Patch ---
+source "$workdir/AyundaRisuPatch.sh"
+# -----------------------------------------------
+
 config --enable CONFIG_KSU
 config --disable CONFIG_KSU_MANUAL_SU
 config --enable CONFIG_KSU_SUSFS
