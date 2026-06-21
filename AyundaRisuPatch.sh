@@ -17,7 +17,6 @@ fi
 
 python3 - << 'AYUNDA_EOF'
 import sys
-import os
 
 filepath = "drivers/kernelsu/runtime/ksud_integration.c"
 
@@ -29,18 +28,12 @@ if "ayunda_exec_buf" in content:
     print("Ayunda Risu exec buffer already patched, skipping.")
     sys.exit(0)
 
-# 1. Add the Ayunda exec buffer globals and ksu_ayunda_exec_once() after
-#    the pavolia_rc_len definition (which PavoliaReinePatch already added),
-#    or after the clang-format on marker if running standalone.
+# ---------------------------------------------------------------------------
+# 1. Inject globals + ksu_ayunda_exec_once()
 #
-#    ksu_ayunda_exec_once() appends a boot_completed init.rc action that
-#    invokes /system/bin/sh -c "<cmd>" under u:r:su:s0 root.
-#    Each call is limited to AYUNDA_MAX_CMD bytes; the total buffer is
-#    AYUNDA_BUF_SIZE bytes. Commands exceeding the budget are dropped with
-#    a pr_warn (never silently "succeed").
-#
-# We insert after the pavolia block when present; otherwise after // clang-format on.
-
+#    Inserts after EXPORT_SYMBOL(ksu_pavolia_add_prop) when Pavolia is
+#    present, otherwise after the // clang-format on marker.
+# ---------------------------------------------------------------------------
 AYUNDA_GLOBALS = """
 /* -----------------------------------------------------------------------
  * Ayunda Risu Native Root Exec — init.rc command queue
@@ -67,8 +60,8 @@ void ksu_ayunda_exec_once(const char *cmd) {
      * /system are fully mounted and the KernelSU domain is active.
      *
      * Format:
-     *   on property:sys.boot_completed=1\n
-     *       exec u:r:su:s0 root -- /system/bin/sh -c "<cmd>"\n
+     *   on property:sys.boot_completed=1
+     *       exec u:r:su:s0 root -- /system/bin/sh -c "<cmd>"
      */
     written = snprintf(entry, sizeof(entry),
         "\\non property:sys.boot_completed=1\\n"
@@ -89,218 +82,206 @@ void ksu_ayunda_exec_once(const char *cmd) {
 EXPORT_SYMBOL(ksu_ayunda_exec_once);
 """
 
-# Prefer inserting after the Pavolia block (if already patched)
 if "pavolia_rc_len = strlen" in content:
-    target = "EXPORT_SYMBOL(ksu_pavolia_add_prop);\n"
-    if target in content:
-        content = content.replace(target, target + AYUNDA_GLOBALS)
+    anchor = "EXPORT_SYMBOL(ksu_pavolia_add_prop);\n"
+    if anchor in content:
+        content = content.replace(anchor, anchor + AYUNDA_GLOBALS, 1)
     else:
-        # Fallback: insert after // clang-format on
-        target = "// clang-format on\n"
-        content = content.replace(target, target + AYUNDA_GLOBALS, 1)
+        anchor = "// clang-format on\n"
+        content = content.replace(anchor, anchor + AYUNDA_GLOBALS, 1)
 else:
-    target = "// clang-format on\n"
-    content = content.replace(target, target + AYUNDA_GLOBALS, 1)
+    anchor = "// clang-format on\n"
+    content = content.replace(anchor, anchor + AYUNDA_GLOBALS, 1)
 
-# 2. Wire ayunda_exec_buf into read_proxy — append after module_rc block.
-#    Mirror the pavolia pattern exactly.
-
-# 2a. Extend the early-exit check in read_proxy
-target_early_exit = "if (ksu_rc_pos >= ksu_rc_len && module_rc_pos >= module_rc_len && pavolia_rc_pos >= pavolia_rc_len) {"
-replacement_early_exit = "if (ksu_rc_pos >= ksu_rc_len && module_rc_pos >= module_rc_len && pavolia_rc_pos >= pavolia_rc_len && ayunda_exec_pos >= (ssize_t)ayunda_exec_len) {"
-
-if target_early_exit in content:
-    content = content.replace(target_early_exit, replacement_early_exit)
+# ---------------------------------------------------------------------------
+# 2a. Extend the early-exit guard in read_proxy AND read_iter_proxy
+#     (no count limit → replaces every occurrence, same as PavoliaReinePatch)
+# ---------------------------------------------------------------------------
+if "pavolia_rc_pos >= pavolia_rc_len) {" in content:
+    content = content.replace(
+        "if (ksu_rc_pos >= ksu_rc_len && module_rc_pos >= module_rc_len && pavolia_rc_pos >= pavolia_rc_len) {",
+        "if (ksu_rc_pos >= ksu_rc_len && module_rc_pos >= module_rc_len && pavolia_rc_pos >= pavolia_rc_len && ayunda_exec_pos >= (ssize_t)ayunda_exec_len) {",
+    )
 else:
-    # Pavolia patch not present; extend the two-buffer version
-    target_early_exit2 = "if (ksu_rc_pos >= ksu_rc_len && module_rc_pos >= module_rc_len) {"
-    replacement_early_exit2 = "if (ksu_rc_pos >= ksu_rc_len && module_rc_pos >= module_rc_len && ayunda_exec_pos >= (ssize_t)ayunda_exec_len) {"
-    content = content.replace(target_early_exit2, replacement_early_exit2)
+    content = content.replace(
+        "if (ksu_rc_pos >= ksu_rc_len && module_rc_pos >= module_rc_len) {",
+        "if (ksu_rc_pos >= ksu_rc_len && module_rc_pos >= module_rc_len && ayunda_exec_pos >= (ssize_t)ayunda_exec_len) {",
+    )
 
-# 2b. Add goto for ayunda after pavolia (or after module if pavolia absent)
+# ---------------------------------------------------------------------------
+# 2b. Add goto dispatch for ayunda in BOTH read_proxy and read_iter_proxy.
+#     No count limit — mirrors how PavoliaReinePatch patches both functions.
+# ---------------------------------------------------------------------------
 if "goto append_pavolia_rc;" in content:
-    target_goto = (
+    content = content.replace(
         "    if (ksu_rc_pos >= ksu_rc_len && module_rc_pos >= module_rc_len && pavolia_rc_pos < pavolia_rc_len)\n"
-        "        goto append_pavolia_rc;"
+        "        goto append_pavolia_rc;",
+        "    if (ksu_rc_pos >= ksu_rc_len && module_rc_pos >= module_rc_len && pavolia_rc_pos < pavolia_rc_len)\n"
+        "        goto append_pavolia_rc;\n"
+        "    if (ksu_rc_pos >= ksu_rc_len && module_rc_pos >= module_rc_len && pavolia_rc_pos >= pavolia_rc_len && ayunda_exec_pos < (ssize_t)ayunda_exec_len)\n"
+        "        goto append_ayunda_exec;",
     )
-    replacement_goto = target_goto + (
-        "\n    if (ksu_rc_pos >= ksu_rc_len && module_rc_pos >= module_rc_len && pavolia_rc_pos >= pavolia_rc_len && ayunda_exec_pos < (ssize_t)ayunda_exec_len)\n"
-        "        goto append_ayunda_exec;"
-    )
-    content = content.replace(target_goto, replacement_goto, 1)
 else:
-    # No pavolia: insert after the module_rc goto
-    target_goto2 = (
+    content = content.replace(
         "    if (ksu_rc_pos >= ksu_rc_len && module_rc_pos < module_rc_len)\n"
-        "        goto append_module_rc;"
+        "        goto append_module_rc;",
+        "    if (ksu_rc_pos >= ksu_rc_len && module_rc_pos < module_rc_len)\n"
+        "        goto append_module_rc;\n"
+        "    if (ksu_rc_pos >= ksu_rc_len && module_rc_pos >= module_rc_len && ayunda_exec_pos < (ssize_t)ayunda_exec_len)\n"
+        "        goto append_ayunda_exec;",
     )
-    replacement_goto2 = target_goto2 + (
-        "\n    if (ksu_rc_pos >= ksu_rc_len && module_rc_pos >= module_rc_len && ayunda_exec_pos < (ssize_t)ayunda_exec_len)\n"
-        "        goto append_ayunda_exec;"
-    )
-    content = content.replace(target_goto2, replacement_goto2, 1)
 
-# 2c. Insert the append_ayunda_exec block before the final `return ret;` in read_proxy
+# ---------------------------------------------------------------------------
+# 2c. Insert append_ayunda_exec label + block in read_proxy.
+#
+#     NOTE: pr_info strings in the C file contain \n (backslash + n, 2 chars).
+#     In Python string literals that maps to \\n (one backslash escape + n).
+# ---------------------------------------------------------------------------
+AYUNDA_READ_PROXY_BLOCK = (
+    "append_ayunda_exec:\n"
+    "    if (ayunda_exec_pos < (ssize_t)ayunda_exec_len && (size_t)ret < count) {\n"
+    "        size_t append_count = ayunda_exec_len - ayunda_exec_pos;\n"
+    "        if (append_count > count - ret)\n"
+    "            append_count = count - ret;\n"
+    "        if (copy_to_user(buf + ret, ayunda_exec_buf + ayunda_exec_pos, append_count)) {\n"
+    "            pr_info(\"read_proxy: ayunda append error, totally appended %zd\\n\", ayunda_exec_pos);\n"
+    "            return ret;\n"
+    "        }\n"
+    "        pr_info(\"read_proxy: append ayunda %zu\\n\", append_count);\n"
+    "        ayunda_exec_pos += append_count;\n"
+    "        ret += append_count;\n"
+    "        if (ayunda_exec_pos == (ssize_t)ayunda_exec_len) {\n"
+    "            pr_info(\"read_proxy: ayunda append done\\n\");\n"
+    "        }\n"
+    "    }\n"
+    "\n"
+    "    return ret;"
+)
+
 if "append_pavolia_rc:" in content:
-    target_return = (
+    # Insert our block in read_proxy, replacing its final `return ret;`
+    # The marker is the closing brace of the pavolia block + blank line + return.
+    target = (
         "        if (pavolia_rc_pos == (ssize_t)pavolia_rc_len) {\n"
-        "            pr_info(\"read_proxy: pavolia append done\\\\n\");\n"
+        "            pr_info(\"read_proxy: pavolia append done\\n\");\n"
         "        }\n"
         "    }\n"
         "\n"
         "    return ret;"
     )
-    replacement_return = (
+    replacement = (
         "        if (pavolia_rc_pos == (ssize_t)pavolia_rc_len) {\n"
-        "            pr_info(\"read_proxy: pavolia append done\\\\n\");\n"
+        "            pr_info(\"read_proxy: pavolia append done\\n\");\n"
         "        }\n"
         "    }\n"
         "\n"
-        "append_ayunda_exec:\n"
-        "    if (ayunda_exec_pos < (ssize_t)ayunda_exec_len && (size_t)ret < count) {\n"
-        "        size_t append_count = ayunda_exec_len - ayunda_exec_pos;\n"
-        "        if (append_count > count - ret)\n"
-        "            append_count = count - ret;\n"
-        "        if (copy_to_user(buf + ret, ayunda_exec_buf + ayunda_exec_pos, append_count)) {\n"
-        "            pr_info(\"read_proxy: ayunda append error, totally appended %zd\\\\n\", ayunda_exec_pos);\n"
-        "            return ret;\n"
-        "        }\n"
-        "        pr_info(\"read_proxy: append ayunda %zu\\\\n\", append_count);\n"
-        "        ayunda_exec_pos += append_count;\n"
-        "        ret += append_count;\n"
-        "        if (ayunda_exec_pos == (ssize_t)ayunda_exec_len) {\n"
-        "            pr_info(\"read_proxy: ayunda append done\\\\n\");\n"
-        "        }\n"
-        "    }\n"
-        "\n"
-        "    return ret;"
+        + AYUNDA_READ_PROXY_BLOCK
     )
-    content = content.replace(target_return, replacement_return, 1)
 else:
-    target_return2 = (
+    target = (
         "        if (module_rc_pos == (ssize_t)module_rc_len) {\n"
-        "            pr_info(\"read_proxy: module append done\\\\n\");\n"
+        "            pr_info(\"read_proxy: module append done\\n\");\n"
         "            free_module_rc();\n"
         "        }\n"
         "    }\n"
         "\n"
         "    return ret;"
     )
-    replacement_return2 = (
+    replacement = (
         "        if (module_rc_pos == (ssize_t)module_rc_len) {\n"
-        "            pr_info(\"read_proxy: module append done\\\\n\");\n"
+        "            pr_info(\"read_proxy: module append done\\n\");\n"
         "            free_module_rc();\n"
         "        }\n"
         "    }\n"
         "\n"
-        "append_ayunda_exec:\n"
-        "    if (ayunda_exec_pos < (ssize_t)ayunda_exec_len && (size_t)ret < count) {\n"
-        "        size_t append_count = ayunda_exec_len - ayunda_exec_pos;\n"
-        "        if (append_count > count - ret)\n"
-        "            append_count = count - ret;\n"
-        "        if (copy_to_user(buf + ret, ayunda_exec_buf + ayunda_exec_pos, append_count)) {\n"
-        "            pr_info(\"read_proxy: ayunda append error, totally appended %zd\\\\n\", ayunda_exec_pos);\n"
-        "            return ret;\n"
-        "        }\n"
-        "        pr_info(\"read_proxy: append ayunda %zu\\\\n\", append_count);\n"
-        "        ayunda_exec_pos += append_count;\n"
-        "        ret += append_count;\n"
-        "        if (ayunda_exec_pos == (ssize_t)ayunda_exec_len) {\n"
-        "            pr_info(\"read_proxy: ayunda append done\\\\n\");\n"
-        "        }\n"
-        "    }\n"
-        "\n"
-        "    return ret;"
+        + AYUNDA_READ_PROXY_BLOCK
     )
-    content = content.replace(target_return2, replacement_return2, 1)
 
-# 3. Wire ayunda_exec_buf into read_iter_proxy — same pattern
+if target in content:
+    content = content.replace(target, replacement, 1)
+else:
+    print("ERROR: read_proxy pavolia/module tail not found — cannot insert append_ayunda_exec label!", file=sys.stderr)
+    sys.exit(1)
+
+# ---------------------------------------------------------------------------
+# 3. Insert append_ayunda_exec label + block in read_iter_proxy.
+# ---------------------------------------------------------------------------
+AYUNDA_READ_ITER_PROXY_BLOCK = (
+    "append_ayunda_exec:\n"
+    "    if (ayunda_exec_pos < (ssize_t)ayunda_exec_len) {\n"
+    "        size_t append_count = copy_to_iter(ayunda_exec_buf + ayunda_exec_pos, ayunda_exec_len - ayunda_exec_pos, to);\n"
+    "        if (!append_count) {\n"
+    "            pr_info(\"read_iter_proxy: ayunda append error, appended %zd\\n\", ayunda_exec_pos);\n"
+    "            return ret;\n"
+    "        }\n"
+    "        pr_info(\"read_iter_proxy: append ayunda %zu\\n\", append_count);\n"
+    "        ayunda_exec_pos += append_count;\n"
+    "        ret += append_count;\n"
+    "        if (ayunda_exec_pos == (ssize_t)ayunda_exec_len) {\n"
+    "            pr_info(\"read_iter_proxy: ayunda append done\\n\");\n"
+    "        }\n"
+    "    }\n"
+    "    return ret;"
+)
+
 if "append_pavolia_rc:" in content:
-    target_iter_goto = (
-        "            pr_info(\"read_iter_proxy: pavolia append done\\\\n\");\n"
+    target_iter = (
+        "            pr_info(\"read_iter_proxy: pavolia append done\\n\");\n"
         "        }\n"
         "    }\n"
         "    return ret;"
     )
-    replacement_iter_goto = (
-        "            pr_info(\"read_iter_proxy: pavolia append done\\\\n\");\n"
+    replacement_iter = (
+        "            pr_info(\"read_iter_proxy: pavolia append done\\n\");\n"
         "        }\n"
         "    }\n"
         "\n"
-        "append_ayunda_exec:\n"
-        "    if (ayunda_exec_pos < (ssize_t)ayunda_exec_len) {\n"
-        "        size_t append_count = copy_to_iter(ayunda_exec_buf + ayunda_exec_pos, ayunda_exec_len - ayunda_exec_pos, to);\n"
-        "        if (!append_count) {\n"
-        "            pr_info(\"read_iter_proxy: ayunda append error, appended %zd\\\\n\", ayunda_exec_pos);\n"
-        "            return ret;\n"
-        "        }\n"
-        "        pr_info(\"read_iter_proxy: append ayunda %zu\\\\n\", append_count);\n"
-        "        ayunda_exec_pos += append_count;\n"
-        "        ret += append_count;\n"
-        "        if (ayunda_exec_pos == (ssize_t)ayunda_exec_len) {\n"
-        "            pr_info(\"read_iter_proxy: ayunda append done\\\\n\");\n"
-        "        }\n"
-        "    }\n"
-        "    return ret;"
+        + AYUNDA_READ_ITER_PROXY_BLOCK
     )
-    content = content.replace(target_iter_goto, replacement_iter_goto, 1)
 else:
-    target_iter_goto2 = (
-        "            pr_info(\"read_iter_proxy: module append done\\\\n\");\n"
+    target_iter = (
+        "            pr_info(\"read_iter_proxy: module append done\\n\");\n"
         "            free_module_rc();\n"
         "        }\n"
         "    }\n"
         "    return ret;"
     )
-    replacement_iter_goto2 = (
-        "            pr_info(\"read_iter_proxy: module append done\\\\n\");\n"
+    replacement_iter = (
+        "            pr_info(\"read_iter_proxy: module append done\\n\");\n"
         "            free_module_rc();\n"
         "        }\n"
         "    }\n"
         "\n"
-        "append_ayunda_exec:\n"
-        "    if (ayunda_exec_pos < (ssize_t)ayunda_exec_len) {\n"
-        "        size_t append_count = copy_to_iter(ayunda_exec_buf + ayunda_exec_pos, ayunda_exec_len - ayunda_exec_pos, to);\n"
-        "        if (!append_count) {\n"
-        "            pr_info(\"read_iter_proxy: ayunda append error, appended %zd\\\\n\", ayunda_exec_pos);\n"
-        "            return ret;\n"
-        "        }\n"
-        "        pr_info(\"read_iter_proxy: append ayunda %zu\\\\n\", append_count);\n"
-        "        ayunda_exec_pos += append_count;\n"
-        "        ret += append_count;\n"
-        "        if (ayunda_exec_pos == (ssize_t)ayunda_exec_len) {\n"
-        "            pr_info(\"read_iter_proxy: ayunda append done\\\\n\");\n"
-        "        }\n"
-        "    }\n"
-        "    return ret;"
+        + AYUNDA_READ_ITER_PROXY_BLOCK
     )
-    content = content.replace(target_iter_goto2, replacement_iter_goto2, 1)
 
-# 4. Update ksu_sys_fstat to include ayunda_exec_len in the reported file size
+if target_iter in content:
+    content = content.replace(target_iter, replacement_iter, 1)
+else:
+    print("ERROR: read_iter_proxy pavolia/module tail not found — cannot insert append_ayunda_exec label!", file=sys.stderr)
+    sys.exit(1)
+
+# ---------------------------------------------------------------------------
+# 4. Update ksu_sys_fstat to include ayunda_exec_len in reported file size
+# ---------------------------------------------------------------------------
 if "pavolia_rc_len" in content:
-    target_extra = "size_t extra = ksu_rc_len + module_rc_len + pavolia_rc_len;"
-    replacement_extra = "size_t extra = ksu_rc_len + module_rc_len + pavolia_rc_len + ayunda_exec_len;"
-    target_pr = (
-        'pr_info("adding rc len: %ld -> %ld (static=%zu module=%zu pavolia=%zu)",'
-        ' size, new_size, ksu_rc_len, module_rc_len, pavolia_rc_len);'
+    content = content.replace(
+        "size_t extra = ksu_rc_len + module_rc_len + pavolia_rc_len;",
+        "size_t extra = ksu_rc_len + module_rc_len + pavolia_rc_len + ayunda_exec_len;",
     )
-    replacement_pr = (
-        'pr_info("adding rc len: %ld -> %ld (static=%zu module=%zu pavolia=%zu ayunda=%zu)",'
-        ' size, new_size, ksu_rc_len, module_rc_len, pavolia_rc_len, ayunda_exec_len);'
+    content = content.replace(
+        'pr_info("adding rc len: %ld -> %ld (static=%zu module=%zu pavolia=%zu)", size, new_size, ksu_rc_len, module_rc_len, pavolia_rc_len);',
+        'pr_info("adding rc len: %ld -> %ld (static=%zu module=%zu pavolia=%zu ayunda=%zu)", size, new_size, ksu_rc_len, module_rc_len, pavolia_rc_len, ayunda_exec_len);',
     )
 else:
-    target_extra = "size_t extra = ksu_rc_len + module_rc_len;"
-    replacement_extra = "size_t extra = ksu_rc_len + module_rc_len + ayunda_exec_len;"
-    target_pr = (
-        'pr_info("adding rc len: %ld -> %ld (static=%zu module=%zu)",'
-        ' size, new_size, ksu_rc_len, module_rc_len);'
+    content = content.replace(
+        "size_t extra = ksu_rc_len + module_rc_len;",
+        "size_t extra = ksu_rc_len + module_rc_len + ayunda_exec_len;",
     )
-    replacement_pr = (
-        'pr_info("adding rc len: %ld -> %ld (static=%zu module=%zu ayunda=%zu)",'
-        ' size, new_size, ksu_rc_len, module_rc_len, ayunda_exec_len);'
+    content = content.replace(
+        'pr_info("adding rc len: %ld -> %ld (static=%zu module=%zu)", size, new_size, ksu_rc_len, module_rc_len);',
+        'pr_info("adding rc len: %ld -> %ld (static=%zu module=%zu ayunda=%zu)", size, new_size, ksu_rc_len, module_rc_len, ayunda_exec_len);',
     )
-content = content.replace(target_extra, replacement_extra)
-content = content.replace(target_pr, replacement_pr)
 
 with open(filepath, "w") as f:
     f.write(content)
