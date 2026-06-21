@@ -49,14 +49,7 @@ inject_selinux "Tenebrion" \
     ksu_allow(db, "kernel", "sysfs", "dir", "getattr");\n\
     ksu_allow(db, "kernel", "sysfs", "file", "read");\n\
     ksu_allow(db, "kernel", "sysfs", "file", "open");\n\
-    ksu_allow(db, "kernel", "sysfs", "file", "getattr");\n\
-    ksu_allow(db, "kernel", "cgroup", "dir", "search");\n\
-    ksu_allow(db, "kernel", "cgroup", "dir", "write");\n\
-    ksu_allow(db, "kernel", "cgroup", "dir", "getattr");\n\
-    ksu_allow(db, "kernel", "cgroup", "file", "read");\n\
-    ksu_allow(db, "kernel", "cgroup", "file", "write");\n\
-    ksu_allow(db, "kernel", "cgroup", "file", "open");\n\
-    ksu_allow(db, "kernel", "cgroup", "file", "getattr");\n'
+    ksu_allow(db, "kernel", "sysfs", "file", "getattr");\n'
 
 # ---------------------------------------------------------------------------
 # Anya Thermal — allow kernel to write thermal zone mode
@@ -83,16 +76,14 @@ inject_selinux "NTSYNC" \
     ksu_allow(db, "untrusted_app", "gpu_device", "chr_file", "map");\n'
 
 # ---------------------------------------------------------------------------
-# Ochinai Inaho Audio — cpuset read/write + dac_override
+# Ochinai Inaho Audio — cpuset read + dac_override
 # ---------------------------------------------------------------------------
 inject_selinux "Ochinai Inaho Audio" \
     '    ksu_allow(db, "kernel", "kernel", "capability", "dac_override");\n\
     ksu_allow(db, "kernel", "cgroup", "dir", "search");\n\
-    ksu_allow(db, "kernel", "cgroup", "dir", "write");\n\
     ksu_allow(db, "kernel", "cgroup", "dir", "getattr");\n\
     ksu_allow(db, "kernel", "cgroup", "file", "getattr");\n\
     ksu_allow(db, "kernel", "cgroup", "file", "read");\n\
-    ksu_allow(db, "kernel", "cgroup", "file", "write");\n\
     ksu_allow(db, "kernel", "cgroup", "file", "open");\n'
 
 # ---------------------------------------------------------------------------
