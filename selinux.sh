@@ -106,7 +106,4 @@ inject_selinux "Schedutil Enforcer" \
     ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "file", "open");\n\
     ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "file", "getattr");\n' 
 
-
-
-
 log "✅ All SELinux rules injected successfully"
