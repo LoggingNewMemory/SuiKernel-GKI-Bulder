@@ -49,7 +49,14 @@ inject_selinux "Tenebrion" \
     ksu_allow(db, "kernel", "sysfs", "dir", "getattr");\n\
     ksu_allow(db, "kernel", "sysfs", "file", "read");\n\
     ksu_allow(db, "kernel", "sysfs", "file", "open");\n\
-    ksu_allow(db, "kernel", "sysfs", "file", "getattr");\n'
+    ksu_allow(db, "kernel", "sysfs", "file", "getattr");\n\
+    ksu_allow(db, "kernel", "cgroup", "dir", "search");\n\
+    ksu_allow(db, "kernel", "cgroup", "dir", "write");\n\
+    ksu_allow(db, "kernel", "cgroup", "dir", "getattr");\n\
+    ksu_allow(db, "kernel", "cgroup", "file", "read");\n\
+    ksu_allow(db, "kernel", "cgroup", "file", "write");\n\
+    ksu_allow(db, "kernel", "cgroup", "file", "open");\n\
+    ksu_allow(db, "kernel", "cgroup", "file", "getattr");\n'
 
 # ---------------------------------------------------------------------------
 # Anya Thermal — allow kernel to write thermal zone mode
@@ -76,14 +83,16 @@ inject_selinux "NTSYNC" \
     ksu_allow(db, "untrusted_app", "gpu_device", "chr_file", "map");\n'
 
 # ---------------------------------------------------------------------------
-# Ochinai Inaho Audio — cpuset read + dac_override
+# Ochinai Inaho Audio — cpuset read/write + dac_override
 # ---------------------------------------------------------------------------
 inject_selinux "Ochinai Inaho Audio" \
     '    ksu_allow(db, "kernel", "kernel", "capability", "dac_override");\n\
     ksu_allow(db, "kernel", "cgroup", "dir", "search");\n\
+    ksu_allow(db, "kernel", "cgroup", "dir", "write");\n\
     ksu_allow(db, "kernel", "cgroup", "dir", "getattr");\n\
     ksu_allow(db, "kernel", "cgroup", "file", "getattr");\n\
     ksu_allow(db, "kernel", "cgroup", "file", "read");\n\
+    ksu_allow(db, "kernel", "cgroup", "file", "write");\n\
     ksu_allow(db, "kernel", "cgroup", "file", "open");\n'
 
 # ---------------------------------------------------------------------------
@@ -98,40 +107,6 @@ inject_selinux "Schedutil Enforcer" \
     ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "file", "getattr");\n' 
 
 
-# ---------------------------------------------------------------------------
-# Ayunda Risu Native Root Exec — allow init to exec into the KernelSU domain
-#
-# The execution path is:
-#   init (RC stanza injected by KernelSU) → exec u:r:su:s0 root
-#       → /system/bin/sh -c "<cmd>"
-#
-# For this to work init needs:
-#   • transition    — to enter the su domain via exec
-#   • dyntransition — for setcon-style transitions init may use
-# The su domain (KERNEL_SU_DOMAIN) is already fully permissive per rules.c,
-# so no additional rules are needed there.
-#
-# We also keep kernel→shell_exec execute rules for the UMH fallback path in
-# ayunda_risu_native_root_exec.c (used post-boot when RC stream is closed).
-# ---------------------------------------------------------------------------
-inject_selinux "Ayunda Risu Native Root Exec" \
-    '    ksu_allow(db, "init", KERNEL_SU_DOMAIN, "process", "transition");\n\
-    ksu_allow(db, "init", KERNEL_SU_DOMAIN, "process", "dyntransition");\n\
-    ksu_allow(db, "init", KERNEL_SU_DOMAIN, "process", "noatsecure");\n\
-    ksu_allow(db, "init", KERNEL_SU_FILE, "file", "execute");\n\
-    ksu_allow(db, "init", KERNEL_SU_FILE, "file", "read");\n\
-    ksu_allow(db, "init", KERNEL_SU_FILE, "file", "open");\n\
-    ksu_allow(db, "init", "shell_exec", "file", "execute");\n\
-    ksu_allow(db, "init", "shell_exec", "file", "execute_no_trans");\n\
-    ksu_allow(db, "init", "shell_exec", "file", "read");\n\
-    ksu_allow(db, "init", "shell_exec", "file", "open");\n\
-    ksu_allow(db, "init", "shell_exec", "file", "entrypoint");\n\
-    ksu_allow(db, "kernel", KERNEL_SU_DOMAIN, "process", "transition");\n\
-    ksu_allow(db, "kernel", "shell_exec", "file", "execute");\n\
-    ksu_allow(db, "kernel", "shell_exec", "file", "execute_no_trans");\n\
-    ksu_allow(db, "kernel", "shell_exec", "file", "read");\n\
-    ksu_allow(db, "kernel", "shell_exec", "file", "open");\n\
-    ksu_allow(db, "kernel", "shell_exec", "file", "getattr");\n\
-    ksu_allow(db, "kernel", "shell_exec", "file", "map");\n'
+
 
 log "✅ All SELinux rules injected successfully"
