@@ -37,6 +37,37 @@ adb wait-for-device
 echo "📤 Pushing kernel to /data/local/tmp/..."
 adb push "$REAL_ZIP" /data/local/tmp/suikernel-update.zip
 
+echo "💾 Backing up current boot.img from device..."
+adb shell "su -c '
+    SLOT=\$(getprop ro.boot.slot_suffix)
+    BOOT_NODE=\"\"
+    if [ -e \"/dev/block/by-name/boot\$SLOT\" ]; then
+        BOOT_NODE=\"/dev/block/by-name/boot\$SLOT\"
+    elif [ -e \"/dev/block/bootdevice/by-name/boot\$SLOT\" ]; then
+        BOOT_NODE=\"/dev/block/bootdevice/by-name/boot\$SLOT\"
+    fi
+    
+    if [ -n \"\$BOOT_NODE\" ]; then
+        echo \"[*] Dumping boot partition from \$BOOT_NODE...\"
+        dd if=\"\$BOOT_NODE\" of=/data/local/tmp/boot_backup.img bs=4M
+    else
+        echo \"❌ Could not find boot partition for backup!\"
+        exit 1
+    fi
+'"
+
+echo "📥 Pulling boot_backup.img to host..."
+rm -f boot_backup.img
+adb pull /data/local/tmp/boot_backup.img boot_backup.img || true
+adb shell "su -c 'rm -f /data/local/tmp/boot_backup.img'"
+
+if [ ! -f boot_backup.img ]; then
+    echo "❌ Failed to create or pull boot_backup.img from device!"
+    rm -rf "$TMP_DIR"
+    exit 1
+fi
+echo "✅ Boot partition backed up to boot_backup.img"
+
 echo "⚙️ Flashing via root shell..."
 # Execute the AnyKernel3 update-binary script directly with BOOTMODE=true
 adb shell "su -c '
