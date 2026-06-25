@@ -122,6 +122,10 @@ else
     BRANCH_TAG="Dev" # Fallback if another branch is used
 fi
 
+if grep -q "CONFIG_KANAGAWA_PERMISSIVE=y" "$DEFCONFIG_FILE"; then
+    VARIANT="${VARIANT}-PERMISSIVE"
+fi
+
 # This sets the string appended to the base kernel version for `uname -r`
 # Format Example: -SuiKernel-Experimental-KSUN
 INTERNAL_BRAND="-${KERNEL_NAME}-${BRANCH_TAG}-${VARIANT}"
