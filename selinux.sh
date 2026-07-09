@@ -111,4 +111,14 @@ inject_selinux "Schedutil Enforcer" \
     ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "file", "open");\n\
     ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "file", "getattr");\n' 
 
+# ---------------------------------------------------------------------------
+# Moona Hoshinova ZRAM — allow kernel to write to page-cluster and vma_ra_enabled
+# ---------------------------------------------------------------------------
+inject_selinux "Moona Hoshinova ZRAM" \
+    '    ksu_allow(db, "kernel", "proc_page_cluster", "file", "read");\n\
+    ksu_allow(db, "kernel", "proc_page_cluster", "file", "write");\n\
+    ksu_allow(db, "kernel", "proc_page_cluster", "file", "open");\n\
+    ksu_allow(db, "kernel", "proc_page_cluster", "file", "getattr");\n\
+    ksu_allow(db, "kernel", "sysfs", "file", "write");\n'
+
 log "✅ All SELinux rules injected successfully"
