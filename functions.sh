@@ -74,7 +74,12 @@ install_ksu() {
 
   URL="https://raw.githubusercontent.com/$REPO/$REF/kernel/setup.sh"
   log "Installing KernelSU from $REPO | $REF"
-  curl -LSs "$URL" | bash -s "$REF"
+  if ! curl -fLSs "$URL" -o ksu_setup.sh; then
+    log "Failed to download from GitHub, trying jsdelivr..."
+    curl -fLSs "https://cdn.jsdelivr.net/gh/$REPO@$REF/kernel/setup.sh" -o ksu_setup.sh
+  fi
+  bash ksu_setup.sh "$REF"
+  rm -f ksu_setup.sh
   export KSU_VERSION="$LATEST_TAG"
 }
 
