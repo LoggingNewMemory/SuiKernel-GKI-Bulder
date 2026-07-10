@@ -90,7 +90,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
-            LATEST_TAG=$(gh api repos/$RELEASE_REPO/tags --jq '.[0].name' 2>/dev/null || echo "")
+            LATEST_TAG=$(gh api repos/$RELEASE_REPO/tags --jq 'map(select(.name | test("HSKY[0-9]+|-r[0-9]+"))) | .[0].name // empty' 2>/dev/null || echo "")
 
             if [[ -z "$LATEST_TAG" ]] || ! echo "$LATEST_TAG" | grep -q "$KERNEL_NAME"; then
                 RELEASE_TAG="$KERNEL_NAME-HSKY1"
