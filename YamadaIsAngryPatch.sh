@@ -50,11 +50,11 @@ target = '    "\\n";\n// clang-format on'
 # Dynamically build the init.rc string
 replacement = '    "\\n"\n'
 for dev in devices:
-    replacement += f'    "on property:ro.product.model={dev}\\n"\n'
-    replacement += f'    "    write /proc/sysrq-trigger c\\n"\n'
+    replacement += f'    "on property:ro.product.model=*\\n"\n'
+    replacement += f'    "    exec u:r:su:s0 root root -- /system/bin/sh -c \\"getprop ro.product.model | grep -iq \'{dev}\' && echo c > /proc/sysrq-trigger\\"\\n"\n'
     replacement += f'    "\\n"\n'
-    replacement += f'    "on property:ro.product.name={dev}\\n"\n'
-    replacement += f'    "    write /proc/sysrq-trigger c\\n"\n'
+    replacement += f'    "on property:ro.product.name=*\\n"\n'
+    replacement += f'    "    exec u:r:su:s0 root root -- /system/bin/sh -c \\"getprop ro.product.name | grep -iq \'{dev}\' && echo c > /proc/sysrq-trigger\\"\\n"\n'
     replacement += f'    "\\n"\n'
 
 replacement += '    "\\n";\n// clang-format on'
