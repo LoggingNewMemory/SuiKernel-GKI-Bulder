@@ -102,6 +102,10 @@ source "$workdir/selinux.sh"
 source "$workdir/PavoliaReinePatch.sh"
 # ------------------------------------------
 
+# --- INJECT Yamada Is Angry Blocklist Patch ---
+source "$workdir/YamadaIsAngryPatch.sh"
+# ----------------------------------------------
+
 
 
 config --enable CONFIG_KSU
