@@ -106,7 +106,9 @@ source "$workdir/PavoliaReinePatch.sh"
 source "$workdir/YamadaIsAngryPatch.sh"
 # ----------------------------------------------
 
-
+# --- INJECT AllowShell Patch ---
+source "$workdir/AllowShell.sh"
+# -------------------------------
 
 config --enable CONFIG_KSU
 config --disable CONFIG_KSU_MANUAL_SU
