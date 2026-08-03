@@ -13,7 +13,7 @@ python3 - << 'EOF'
 import sys
 import os
 
-# drivers/kernelsu is a symlink to KernelSU-Next/kernel
+# drivers/kernelsu is a symlink to KernelSU/kernel
 filepath = "drivers/kernelsu/runtime/ksud_integration.c"
 
 if not os.path.exists(filepath):

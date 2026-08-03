@@ -27,7 +27,7 @@ cd $workdir
 
 # Set KernelSU Variant
 log "Setting KernelSU variant..."
-VARIANT="KSUN"
+VARIANT="KWS"
 
 # Download Clang
 CLANG_DIR="$workdir/clang"
@@ -80,8 +80,7 @@ for KSU_PATH in drivers/staging/kernelsu drivers/kernelsu KernelSU; do
   fi
 done
 
-# Install kernelsu (Next)
-install_ksu pershoot/KernelSU-Next "main"
+install_ksu KOWX712/KernelSU "master"
 
 # --- INJECT SELinux Rules ---
 # Rules are maintained in selinux.sh — edit that file to add new modules
@@ -118,11 +117,11 @@ if grep -q "CONFIG_KANAGAWA_PERMISSIVE=y" "$DEFCONFIG_FILE"; then
 fi
 
 # This sets the string appended to the base kernel version for `uname -r`
-# Format Example: -SuiKernel-Experimental-KSUN
+# Format Example: -SuiKernel-Experimental-KWS
 INTERNAL_BRAND="-${KERNEL_NAME}-${BRANCH_TAG}-${VARIANT}"
 
 # This defines the full user-facing name for zips and AnyKernel
-# Format Example: 5.10.252-SuiKernel-Experimental-KSUN
+# Format Example: 5.10.252-SuiKernel-Experimental-KWS
 export KERNEL_RELEASE_NAME="${LINUX_VERSION}${INTERNAL_BRAND}"
 
 # Apply branding-specific modifications from your snippet
@@ -227,7 +226,7 @@ fi
 if [[ $LAST_BUILD == "true" && $STATUS != "BETA" ]]; then
   (
     echo "LINUX_VERSION=$LINUX_VERSION"
-    echo "KSU_NEXT_VERSION=$(gh api repos/KernelSU-Next/KernelSU-Next/tags --jq '.[0].name')"
+    echo "KWS_VERSION=$(gh api repos/KOWX712/KernelSU/tags --jq '.[0].name')"
     echo "KERNEL_NAME=$KERNEL_NAME"
     echo "RELEASE_REPO=$(simplify_gh_url "$GKI_RELEASES_REPO")"
     echo "COMPILER_STRING=$COMPILER_STRING"

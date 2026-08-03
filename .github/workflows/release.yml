@@ -26,7 +26,7 @@ jobs:
     strategy:
       matrix:
         variant:
-          - { name: "KSUN", KSU: "Next", LAST_BUILD: "true" }
+          - { name: "KWS", KSU: "KWS", LAST_BUILD: "true" }
     name: Build ${{ matrix.variant.name }} variant
     uses: ./.github/workflows/build.yml
     secrets: inherit
@@ -78,7 +78,7 @@ jobs:
 
             echo "KERNEL_NAME=SuiKernel" >> $GITHUB_ENV
             echo "LINUX_VERSION=5.10" >> $GITHUB_ENV
-            echo "KSU_NEXT_VERSION=unknown" >> $GITHUB_ENV
+            echo "KWS_VERSION=unknown" >> $GITHUB_ENV
             echo "COMPILER_STRING=Unknown Compiler" >> $GITHUB_ENV
             echo "RELEASE_REPO=LoggingNewMemory/SuiKernel-Releases" >> $GITHUB_ENV
 
@@ -130,11 +130,11 @@ jobs:
           body: |
             ## 📢 ${{ env.RELEASE_TAG }} Builds
             -> Linux ${{ env.LINUX_VERSION }} (android12-5.10-lts)
-            -> KSUNext ${{ env.KSU_NEXT_VERSION }}
+            -> KWS ${{ env.KWS_VERSION }}
             -> Compiler: ${{ env.COMPILER_STRING }}
             -> Kakangkuh: 100
 
-            Grab your KernelSU Next Manager HERE:
+            Grab your KWS Manager HERE:
             Normal: ${{ inputs.MANAGER_NORMAL }}
             Spoofed: ${{ inputs.MANAGER_SPOOFED }}
 

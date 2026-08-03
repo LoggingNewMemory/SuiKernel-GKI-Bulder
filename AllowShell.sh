@@ -5,9 +5,7 @@
 
 log "Applying AllowShell Patch..."
 
-if [[ -d "$KSRC/KernelSU-Next" ]]; then
-    KSU_DIR="$KSRC/KernelSU-Next"
-elif [[ -d "$KSRC/KernelSU" ]]; then
+if [[ -d "$KSRC/KernelSU" ]]; then
     KSU_DIR="$KSRC/KernelSU"
 else
     log "[ERROR] KernelSU directory not found!"
