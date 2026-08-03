@@ -23,20 +23,13 @@ on:
 
 jobs:
   build:
-    strategy:
-      matrix:
-        variant:
-          - { name: "KWS", KSU: "KWS", LAST_BUILD: "true" }
-    name: Build ${{ matrix.variant.name }} variant
+    name: Build KWS variant
     uses: ./.github/workflows/build.yml
     secrets: inherit
     with:
       STATUS: "RELEASE"
       RUNNER_TYPE: ${{ inputs.RUNNER_TYPE }}
-      KSU: ${{ matrix.variant.KSU }}
-      LAST_BUILD: ${{ matrix.variant.LAST_BUILD }}
       BUILD_BOOTIMG: "false"
-      TODO: "kernel"
       BRANCH_CHOICE: "suikernel-stable"
 
   release:

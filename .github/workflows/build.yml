@@ -6,13 +6,7 @@ on:
       RUNNER_TYPE:
         type: string
         default: 'self-hosted'
-      TODO:
-        type: string
-      KSU:
-        type: string
       BUILD_BOOTIMG:
-        type: string
-      LAST_BUILD:
         type: string
       STATUS:
         type: string
@@ -33,21 +27,6 @@ on:
           - "server-hive"
           - "kaela-build"
 
-      TODO:
-        description: To do
-        default: ""
-        type: choice
-        options:
-          - "kernel"
-          - "defconfig"
-
-      KSU:
-        description: KernelSU variant
-        default: "Next"
-        type: choice
-        options:
-          - "Next"
-      
       BRANCH_CHOICE:
         description: Target Kernel Branch
         default: "suikernel-stable"
@@ -114,10 +93,7 @@ jobs:
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          KSU: ${{ inputs.KSU }}
           BUILD_BOOTIMG: ${{ inputs.BUILD_BOOTIMG }}
-          LAST_BUILD: ${{ inputs.LAST_BUILD }}
-          TODO: ${{ inputs.TODO }}
           STATUS: ${{ inputs.STATUS }}
           KERNEL_BRANCH_ENV: ${{ inputs.BRANCH_CHOICE }}
           RUNNER_TYPE: ${{ inputs.RUNNER_TYPE }}

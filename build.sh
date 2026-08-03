@@ -157,7 +157,7 @@ text=$(
 🐧 *Linux Version*: $LINUX_VERSION
 🐱 *Branch*: $BRANCH_TAG
 🖥️ *Runner*: $RUNNER_TYPE
-📛 *KernelSU*: ${KSU} | $KSU_VERSION
+📛 *KernelSU*: KWS | $KSU_VERSION
 🔰 *Compiler*: $COMPILER_STRING
 😸 *Kakangkuh*: 100
 EOF
@@ -172,12 +172,7 @@ echo "MESSAGE_ID=$MESSAGE_ID" >> $GITHUB_ENV
 log "Generating config..."
 make $BUILD_FLAGS $KERNEL_DEFCONFIG
 
-# Upload defconfig if we are doing defconfig
-if [[ $TODO == "defconfig" ]]; then
-  log "Uploading defconfig..."
-  upload_file $KSRC/out/.config
-  exit 0
-fi
+
 
 # Build the actual kernel
 log "Building kernel..."
@@ -223,7 +218,7 @@ if [[ $STATUS != "BETA" ]]; then
   mv $workdir/*.zip $workdir/artifacts
 fi
 
-if [[ $LAST_BUILD == "true" && $STATUS != "BETA" ]]; then
+if [[ $STATUS != "BETA" ]]; then
   (
     echo "LINUX_VERSION=$LINUX_VERSION"
     echo "KWS_VERSION=$(gh api repos/KOWX712/KernelSU/tags --jq '.[0].name')"
