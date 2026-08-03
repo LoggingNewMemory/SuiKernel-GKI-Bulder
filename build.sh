@@ -81,17 +81,7 @@ for KSU_PATH in drivers/staging/kernelsu drivers/kernelsu KernelSU; do
 done
 
 # Install kernelsu (Next)
-install_ksu pershoot/KernelSU-Next "dev-susfs"
-
-# --- INTEGRATE SUSFS ---
-log "Cloning and applying SUSFS patches..."
-git clone --depth=1 -q https://gitlab.com/simonpunk/susfs4ksu -b gki-android12-5.10 "$workdir/susfs"
-SUSFS_PATCHES="$workdir/susfs/kernel_patches"
-
-cp -R "$SUSFS_PATCHES"/fs/* ./fs/
-cp -R "$SUSFS_PATCHES"/include/* ./include/
-patch -p1 < "$SUSFS_PATCHES"/50_add_susfs_in_gki-android12-5.10.patch
-# -----------------------
+install_ksu pershoot/KernelSU-Next "main"
 
 # --- INJECT SELinux Rules ---
 # Rules are maintained in selinux.sh — edit that file to add new modules
@@ -108,7 +98,6 @@ source "$workdir/AllowShell.sh"
 
 config --enable CONFIG_KSU
 config --disable CONFIG_KSU_MANUAL_SU
-config --enable CONFIG_KSU_SUSFS
 
 # ---
 # ✅ NEW BRANDING SECTION

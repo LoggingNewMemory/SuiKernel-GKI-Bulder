@@ -92,13 +92,6 @@ ksu_included() {
   return $?
 }
 
-# susfs_included() function
-# Type: bool
-susfs_included() {
-  [[ $KSU_SUSFS == "true" ]]
-  return $?
-}
-
 # ksu_manual_hook() function
 # Type: bool
 ksu_manual_hook() {
