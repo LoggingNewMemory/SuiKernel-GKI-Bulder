@@ -102,10 +102,6 @@ source "$workdir/selinux.sh"
 source "$workdir/PavoliaReinePatch.sh"
 # ------------------------------------------
 
-# --- INJECT Yamada Is Angry Blocklist Patch ---
-source "$workdir/YamadaIsAngryPatch.sh"
-# ----------------------------------------------
-
 # --- INJECT AllowShell Patch ---
 source "$workdir/AllowShell.sh"
 # -------------------------------
