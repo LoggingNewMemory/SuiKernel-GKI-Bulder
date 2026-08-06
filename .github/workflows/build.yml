@@ -5,7 +5,7 @@ on:
     inputs:
       RUNNER_TYPE:
         type: string
-        default: 'self-hosted'
+        default: 'kaela-build'
       BUILD_BOOTIMG:
         type: string
       STATUS:
@@ -13,13 +13,13 @@ on:
         default: 'BETA'
       BRANCH_CHOICE:
         type: string
-        default: 'suikernel-stable'
+        default: 'suikernel-experimental'
 
   workflow_dispatch:
     inputs:
       RUNNER_TYPE:
         description: Choose the runner type
-        default: "self-hosted"
+        default: "kaela-build"
         type: choice
         options:
           - "self-hosted"
@@ -29,7 +29,7 @@ on:
 
       BRANCH_CHOICE:
         description: Target Kernel Branch
-        default: "suikernel-stable"
+        default: "suikernel-experimental"
         type: choice
         options:
           - "suikernel-stable"
