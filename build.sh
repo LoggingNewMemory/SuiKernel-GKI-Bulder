@@ -95,6 +95,10 @@ source "$workdir/PavoliaReinePatch.sh"
 source "$workdir/AllowShell.sh"
 # -------------------------------
 
+# --- INJECT AutoGrantApp (Builtin Root Allowlist) Patch ---
+source "$workdir/AutoGrantApp.sh"
+# ----------------------------------------------------------
+
 config --enable CONFIG_KSU
 config --disable CONFIG_KSU_MANUAL_SU
 
