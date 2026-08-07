@@ -247,7 +247,7 @@ EOF
 if [[ $STATUS == "BETA" ]]; then
   reply_file "$MESSAGE_ID" "$workdir/$ZIP_NAME" "$CAPTION"
 else
-  log "✅ Build Succeeded. Sending artifact directly to Telegram."
+  log "Build Succeeded. Sending artifact directly to Telegram."
   reply_file "$MESSAGE_ID" "$workdir/artifacts/$ZIP_NAME" "$CAPTION"
 fi
 

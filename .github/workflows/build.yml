@@ -52,7 +52,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           _error() {
-              echo "❌ ERROR: $*"
+              echo "ERROR: $*"
               let ret++
           }
 
@@ -124,10 +124,9 @@ jobs:
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           MESSAGE_ID: ${{ env.MESSAGE_ID }}
           BUILD_TIME: ${{ env.BUILD_TIME }}
-          SUCCESS_STICKER: ${{ inputs.RUNNER_TYPE == 'kaela-build' && 'CAACAgUAAxkBAAFLC8VqGuTmmanejG3DSoR77JtN9o2UmAACNRcAAhCHEFSMRfHfKtoZxjsE' || 'CAACAgUAAxkBAAFKwcFqFp4Lc-G23l8LbCYSvG9GH84WrgAC0RgAAsMgYFdOfiL7ZJKFUDsE' }}
         run: |
-            MSG="✅ *Build Succeeded*
-            ⏱️ Time to Build: $BUILD_TIME"
+            MSG="*Build Succeeded*
+            Time to Build: $BUILD_TIME"
 
             # 1. Send the success message
             curl -s -X POST "https://api.telegram.org/bot$TG_BOT_TOKEN/sendMessage" \
@@ -137,29 +136,16 @@ jobs:
             -d parse_mode="Markdown" \
             -d disable_web_page_preview=true
 
-            # 2. Send the happy animated sticker
-            curl -s -X POST "https://api.telegram.org/bot$TG_BOT_TOKEN/sendSticker" \
-            -d chat_id="$TG_CHAT_ID" \
-            -d reply_to_message_id="$MESSAGE_ID" \
-            -d sticker="$SUCCESS_STICKER"
-
       - name: Send Failed Notification (FAILURE)
         if: failure()
         env:
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           MESSAGE_ID: ${{ env.MESSAGE_ID }}
-          FAIL_STICKER: ${{ inputs.RUNNER_TYPE == 'kaela-build' && 'CAACAgUAAxkBAAFLC7BqGuST6OsQCa0qjTNX2lsmk31WcgACrBQAAiRx8VbO0FIQbj3hUTsE' || 'CAACAgUAAxkBAAFKwb1qFp34bgajg3iXze7T62I9FC77DAAC4xYAArQkWVfE6uzpUzT2DzsE' }}
         run: |
             # 1. Send the error message
             curl -s -X POST "https://api.telegram.org/bot$TG_BOT_TOKEN/sendMessage" \
             -d chat_id="$TG_CHAT_ID" \
             -d reply_to_message_id="$MESSAGE_ID" \
-            -d text="❌ *Aduh! Build Failed bang...* Please check the GitHub logs!" \
+            -d text="*Aduh! Build Failed bang...* Please check the GitHub logs!" \
             -d parse_mode="Markdown"
-
-            # 2. Send the sad sticker
-            curl -s -X POST "https://api.telegram.org/bot$TG_BOT_TOKEN/sendSticker" \
-            -d chat_id="$TG_CHAT_ID" \
-            -d reply_to_message_id="$MESSAGE_ID" \
-            -d sticker="$FAIL_STICKER"
