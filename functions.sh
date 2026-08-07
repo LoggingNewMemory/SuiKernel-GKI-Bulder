@@ -18,19 +18,30 @@ upload_file() {
     -F "parse_mode=markdown"
 }
 
-# reply_file <message_id> <path/to/file>
+# reply_file <message_id> <path/to/file> [caption]
 reply_file() {
   local MESSAGE_ID="$1"
   local FILE="$2"
+  local CAPTION="$3"
   if ! [[ -f $FILE ]]; then
     error "file $FILE doesn't exist"
   fi
   chmod 777 $FILE
-  curl -s -F document=@"$FILE" "https://api.telegram.org/bot$TG_BOT_TOKEN/sendDocument" \
-    -F "chat_id=$TG_CHAT_ID" \
-    -F "reply_to_message_id=$MESSAGE_ID" \
-    -F "disable_web_page_preview=true" \
-    -F "parse_mode=markdown"
+  
+  if [[ -n "$CAPTION" ]]; then
+    curl -s -F document=@"$FILE" "https://api.telegram.org/bot$TG_BOT_TOKEN/sendDocument" \
+      -F "chat_id=$TG_CHAT_ID" \
+      -F "reply_to_message_id=$MESSAGE_ID" \
+      -F "caption=$CAPTION" \
+      -F "disable_web_page_preview=true" \
+      -F "parse_mode=markdown"
+  else
+    curl -s -F document=@"$FILE" "https://api.telegram.org/bot$TG_BOT_TOKEN/sendDocument" \
+      -F "chat_id=$TG_CHAT_ID" \
+      -F "reply_to_message_id=$MESSAGE_ID" \
+      -F "disable_web_page_preview=true" \
+      -F "parse_mode=markdown"
+  fi
 }
 
 # send_msg <text>

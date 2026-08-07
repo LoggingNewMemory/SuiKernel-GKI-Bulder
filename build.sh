@@ -160,7 +160,7 @@ text=$(
 *==== SuiKernel Builder ====*
 🐧 *Linux Version*: $LINUX_VERSION
 🐱 *Branch*: $BRANCH_TAG
-🖥️ *Runner*: $RUNNER_TYPE
+🖥️ *Runner*: $RUNNER_NAME
 📛 *KernelSU*: KWS | $KSU_VERSION
 🔰 *Compiler*: $COMPILER_STRING
 😸 *Kakangkuh*: 100
@@ -172,11 +172,9 @@ MESSAGE_ID=$(send_msg "$text" 2>&1 | jq -r .result.message_id)
 echo "MESSAGE_ID=$MESSAGE_ID" >> $GITHUB_ENV
 # ---------------------------------------
 
-## Build GKI
+## SuiKernel Single
 log "Generating config..."
 make $BUILD_FLAGS $KERNEL_DEFCONFIG
-
-
 
 # Build the actual kernel
 log "Building kernel..."
@@ -236,12 +234,21 @@ BUILD_END=$(date +%s)
 BUILD_DIFF=$((BUILD_END - BUILD_START))
 BUILD_MINS=$((BUILD_DIFF / 60))
 BUILD_SECS=$((BUILD_DIFF % 60))
-echo "BUILD_TIME=${BUILD_MINS}m ${BUILD_SECS}s" >> $GITHUB_ENV
+BUILD_TIME_STR="${BUILD_MINS}m ${BUILD_SECS}s"
+echo "BUILD_TIME=$BUILD_TIME_STR" >> $GITHUB_ENV
+
+CAPTION=$(cat << EOF
+Build Time: $BUILD_TIME_STR
+Build By: $RUNNER_NAME
+Kakangku: 100
+EOF
+)
 
 if [[ $STATUS == "BETA" ]]; then
-  reply_file "$MESSAGE_ID" "$workdir/$ZIP_NAME"
+  reply_file "$MESSAGE_ID" "$workdir/$ZIP_NAME" "$CAPTION"
 else
-  log "✅ Build Succeeded. Artifact link will be sent by GitHub Action."
+  log "✅ Build Succeeded. Sending artifact directly to Telegram."
+  reply_file "$MESSAGE_ID" "$workdir/artifacts/$ZIP_NAME" "$CAPTION"
 fi
 
 # Always send the build log on success, regardless of status

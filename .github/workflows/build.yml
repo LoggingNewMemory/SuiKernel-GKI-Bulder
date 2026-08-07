@@ -1,4 +1,4 @@
-name: Build GKI
+name: SuiKernel Single
 
 on:
   workflow_call:
@@ -97,6 +97,7 @@ jobs:
           STATUS: ${{ inputs.STATUS }}
           KERNEL_BRANCH_ENV: ${{ inputs.BRANCH_CHOICE }}
           RUNNER_TYPE: ${{ inputs.RUNNER_TYPE }}
+          RUNNER_NAME: ${{ runner.name }}
         run: |
           export GIT_CLONE_PROTECTION_ACTIVE=false
           chmod +x *.sh
@@ -116,7 +117,7 @@ jobs:
           name: info-${{ github.run_number }}
           path: artifacts/*.txt
 
-      - name: Send Artifact Link to Telegram (SUCCESS)
+      - name: Send Success Notification to Telegram (SUCCESS)
         if: inputs.STATUS != 'BETA' && success()
         env:
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
@@ -124,12 +125,9 @@ jobs:
           MESSAGE_ID: ${{ env.MESSAGE_ID }}
           BUILD_TIME: ${{ env.BUILD_TIME }}
           SUCCESS_STICKER: ${{ inputs.RUNNER_TYPE == 'kaela-build' && 'CAACAgUAAxkBAAFLC8VqGuTmmanejG3DSoR77JtN9o2UmAACNRcAAhCHEFSMRfHfKtoZxjsE' || 'CAACAgUAAxkBAAFKwcFqFp4Lc-G23l8LbCYSvG9GH84WrgAC0RgAAsMgYFdOfiL7ZJKFUDsE' }}
-          ARTIFACT_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts/${{ steps.upload-zip.outputs.artifact-id }}
         run: |
             MSG="✅ *Build Succeeded*
-            ⏱️ Time to Build: $BUILD_TIME
-
-            📥 [Download Artifact]($ARTIFACT_URL)"
+            ⏱️ Time to Build: $BUILD_TIME"
 
             # 1. Send the success message
             curl -s -X POST "https://api.telegram.org/bot$TG_BOT_TOKEN/sendMessage" \
