@@ -158,12 +158,12 @@ touch .scmversion
 text=$(
   cat << EOF
 *==== SuiKernel Builder ====*
-🐧 *Linux Version*: $LINUX_VERSION
-🐱 *Branch*: $BRANCH_TAG
-🖥️ *Runner*: $RUNNER_NAME
-📛 *KernelSU*: KWS | $KSU_VERSION
-🔰 *Compiler*: $COMPILER_STRING
-😸 *Kakangkuh*: 100
+*Linux Version*: $LINUX_VERSION
+*Branch*: $BRANCH_TAG
+*Runner*: $RUNNER_NAME
+*KernelSU*: KWS | $KSU_VERSION
+*Compiler*: $COMPILER_STRING
+*Kakangkuh*: 100
 EOF
 )
 MESSAGE_ID=$(send_msg "$text" 2>&1 | jq -r .result.message_id)
