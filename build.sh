@@ -32,7 +32,7 @@ VARIANT="KWS"
 # Download Clang
 CLANG_DIR="$workdir/clang"
 if [[ -z "$CLANG_BRANCH" ]]; then
-  log "🔽 Downloading Clang..."
+  log "Downloading Clang..."
   aria2c -q -c -x16 -s32 -k8M --file-allocation=falloc --timeout=60 --retry-wait=5 -o tarball "$CLANG_URL"
   mkdir -p "$CLANG_DIR"
   tar -xf tarball -C "$CLANG_DIR"
@@ -45,7 +45,7 @@ if [[ -z "$CLANG_BRANCH" ]]; then
     rm -rf $SINGLE_DIR
   fi
 else
-  log "🔽 Cloning Clang..."
+  log "Cloning Clang..."
   git clone --depth=1 -q "$CLANG_URL" -b "$CLANG_BRANCH" "$CLANG_DIR"
 fi
 
@@ -56,7 +56,7 @@ COMPILER_STRING=$(clang -v 2>&1 | head -n 1 | sed 's/(https..*//' | sed 's/ vers
 
 # Clone GCC if not available
 if ! ls $CLANG_DIR/bin | grep -q "aarch64-linux-gnu"; then
-  log "🔽 Cloning GCC..."
+  log "Cloning GCC..."
   git clone --depth=1 -q https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-gnu-9.3 $workdir/gcc
   export PATH="$workdir/gcc/bin:$PATH"
   CROSS_COMPILE_PREFIX="aarch64-linux-"
@@ -103,9 +103,9 @@ config --enable CONFIG_KSU
 config --disable CONFIG_KSU_MANUAL_SU
 
 # ---
-# ✅ NEW BRANDING SECTION
+# NEW BRANDING SECTION
 # ---
-log "🧹 Finalizing build configuration with branding..."
+log "Finalizing build configuration with branding..."
 
 # Determine branch type for the name
 if [[ "$KERNEL_BRANCH" == "suikernel-experimental" ]]; then
@@ -137,7 +137,7 @@ fi
 # Set the kernel's local version for uname -r and disable auto-generation
 config --set-str CONFIG_LOCALVERSION "$INTERNAL_BRAND"
 config --disable CONFIG_LOCALVERSION_AUTO
-log "✅ Internal kernel version set to: ${KERNEL_RELEASE_NAME}"
+log "Internal kernel version set to: ${KERNEL_RELEASE_NAME}"
 
 
 # Declare needed variables
