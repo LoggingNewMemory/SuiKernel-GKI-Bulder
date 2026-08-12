@@ -241,6 +241,7 @@ CAPTION=$(cat << EOF
 Build Time: $BUILD_TIME_STR
 Build By: $RUNNER_NAME
 Kakangku: 100
+KowSU Manager: https://t.me/kowsu_build
 EOF
 )
 
