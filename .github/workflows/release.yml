@@ -117,7 +117,7 @@ jobs:
             -> Linux ${{ env.LINUX_VERSION }} (android12-5.10-lts)
             -> KWS ${{ env.KWS_VERSION }}
             -> Compiler: ${{ env.COMPILER_STRING }}
-            -> Kakangkuh: 100
+            -> Kakangku: 100
 
             Grab your KWS Manager HERE: https://t.me/kowsu_build
 
