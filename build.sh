@@ -210,14 +210,14 @@ fi
 cd anykernel
 log "Zipping anykernel..."
 cp $KERNEL_IMAGE .
-zip -r9 $workdir/$ZIP_NAME ./*
+zip -r9 "$workdir/$ZIP_NAME" ./*
 cd -
 
 if [[ $STATUS != "BETA" ]]; then
   echo "BASE_NAME=$KERNEL_NAME-$VARIANT" >> $GITHUB_ENV
   mkdir -p $workdir/artifacts
   # Only move zips
-  mv $workdir/*.zip $workdir/artifacts
+  mv "$workdir/"*.zip "$workdir/artifacts/"
 fi
 
 if [[ $STATUS != "BETA" ]]; then
@@ -241,7 +241,7 @@ CAPTION=$(cat << EOF
 Build Time: $BUILD_TIME_STR
 Build By: $RUNNER_NAME
 Kakangku: 100
-KowSU Manager: https://t.me/kowsu_build
+KowSU Manager: https://t.me/kowsu\_build
 EOF
 )
 
