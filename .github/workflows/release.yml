@@ -12,14 +12,6 @@ on:
           - 'ubuntu-latest'
           - 'server-hive'
           - 'kaela-build'
-      MANAGER_NORMAL:
-        description: 'Link for Normal KernelSU Next Manager APK'
-        required: true
-        type: string
-      MANAGER_SPOOFED:
-        description: 'Link for Spoofed KernelSU Next Manager APK'
-        required: true
-        type: string
 
 jobs:
   build:
@@ -127,9 +119,7 @@ jobs:
             -> Compiler: ${{ env.COMPILER_STRING }}
             -> Kakangkuh: 100
 
-            Grab your KWS Manager HERE:
-            Normal: ${{ inputs.MANAGER_NORMAL }}
-            Spoofed: ${{ inputs.MANAGER_SPOOFED }}
+            Grab your KWS Manager HERE: https://t.me/kowsu_build
 
             ### 📝 Changelogs
             *(Edit this release to add changelogs)*
