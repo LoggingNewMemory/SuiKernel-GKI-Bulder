@@ -1,4 +1,5 @@
 name: Release Build
+run-name: Build Release
 
 on:
   workflow_dispatch:
@@ -121,11 +122,11 @@ jobs:
             -> Kakangku: 100
 
             Bridge Supports:
-- KernelSU
-- KernelSU Next
-- ReSukiSU
-- SukiSU Ultra
-- FolkPatch / APatch
+            - KernelSU
+            - KernelSU Next
+            - ReSukiSU
+            - SukiSU Ultra
+            - FolkPatch / APatch
 
             ### Changelogs
             *(Edit this release to add changelogs)*
