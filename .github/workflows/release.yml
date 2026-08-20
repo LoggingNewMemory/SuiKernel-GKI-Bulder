@@ -15,7 +15,7 @@ on:
 
 jobs:
   build:
-    name: Build KWS variant
+    name: Build Bridge variant
     uses: ./.github/workflows/build.yml
     secrets: inherit
     with:
@@ -63,7 +63,8 @@ jobs:
 
             echo "KERNEL_NAME=SuiKernel" >> $GITHUB_ENV
             echo "LINUX_VERSION=5.10" >> $GITHUB_ENV
-            echo "KWS_VERSION=unknown" >> $GITHUB_ENV
+            echo "BRIDGE_VERSION=unknown" >> $GITHUB_ENV
+            echo "ROOT_METHOD=KSU-Bridge" >> $GITHUB_ENV
             echo "COMPILER_STRING=Unknown Compiler" >> $GITHUB_ENV
             echo "RELEASE_REPO=LoggingNewMemory/SuiKernel-Releases" >> $GITHUB_ENV
 
@@ -115,11 +116,16 @@ jobs:
           body: |
             ## ${{ env.RELEASE_TAG }} Builds
             -> Linux ${{ env.LINUX_VERSION }} (android12-5.10-lts)
-            -> KWS ${{ env.KWS_VERSION }}
+            -> Universal Build: KSU-Bridge (${{ env.BRIDGE_VERSION }}) & Vanilla
             -> Compiler: ${{ env.COMPILER_STRING }}
             -> Kakangku: 100
 
-            Grab your KWS Manager HERE: https://t.me/kowsu_build
+            Bridge Supports:
+- KernelSU
+- KernelSU Next
+- ReSukiSU
+- SukiSU Ultra
+- FolkPatch / APatch
 
             ### Changelogs
             *(Edit this release to add changelogs)*

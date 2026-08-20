@@ -37,6 +37,10 @@ on:
 
 jobs:
   build:
+    strategy:
+      fail-fast: false
+      matrix:
+        root_method: [KSU-Bridge, Vanilla]
     runs-on: ${{ (inputs.RUNNER_TYPE == 'server-hive' || inputs.RUNNER_TYPE == 'kaela-build') && 'self-hosted' || inputs.RUNNER_TYPE }}
 
     steps:
@@ -96,6 +100,7 @@ jobs:
           BUILD_BOOTIMG: ${{ inputs.BUILD_BOOTIMG }}
           STATUS: ${{ inputs.STATUS }}
           KERNEL_BRANCH_ENV: ${{ inputs.BRANCH_CHOICE }}
+          ROOT_METHOD: ${{ matrix.root_method }}
           RUNNER_TYPE: ${{ inputs.RUNNER_TYPE }}
           RUNNER_NAME: ${{ runner.name }}
         run: |
@@ -114,7 +119,7 @@ jobs:
       - name: Upload Artifacts (Info File)
         uses: actions/upload-artifact@v4
         with:
-          name: info-${{ github.run_number }}
+          name: info-${{ matrix.root_method }}-${{ github.run_number }}
           path: artifacts/*.txt
 
       - name: Send Success Notification to Telegram (SUCCESS)

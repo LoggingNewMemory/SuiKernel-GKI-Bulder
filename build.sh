@@ -27,7 +27,7 @@ cd $workdir
 
 # Set KernelSU Variant
 log "Setting KernelSU variant..."
-VARIANT="KWS"
+VARIANT="Bridge"
 
 # Download Clang
 CLANG_DIR="$workdir/clang"
@@ -80,7 +80,11 @@ for KSU_PATH in drivers/staging/kernelsu drivers/kernelsu KernelSU; do
   fi
 done
 
-install_ksu LoggingNewMemory/KSU-Bridge "main"
+if [[ "$ROOT_METHOD" == "Vanilla" ]]; then
+  log "Skipping KernelSU integration (Vanilla Build)"
+  VARIANT="Vanilla"
+else
+  install_ksu LoggingNewMemory/KSU-Bridge "main"
 
 # --- INJECT SELinux Rules ---
 # Rules are maintained in selinux.sh — edit that file to add new modules
@@ -104,6 +108,11 @@ source "$workdir/SUSFSPatch.sh"
 
 config --enable CONFIG_KSU
 config --disable CONFIG_KSU_MANUAL_SU
+fi
+
+if [[ "$ROOT_METHOD" == "Vanilla" ]]; then
+  config --disable CONFIG_KSU
+fi
 
 # ---
 # NEW BRANDING SECTION
@@ -124,11 +133,11 @@ if grep -q "CONFIG_KANAGAWA_PERMISSIVE=y" "$DEFCONFIG_FILE"; then
 fi
 
 # This sets the string appended to the base kernel version for `uname -r`
-# Format Example: -SuiKernel-Experimental-KWS
+# Format Example: -SuiKernel-Experimental-Bridge
 INTERNAL_BRAND="-${KERNEL_NAME}-${BRANCH_TAG}-${VARIANT}"
 
 # This defines the full user-facing name for zips and AnyKernel
-# Format Example: 5.10.252-SuiKernel-Experimental-KWS
+# Format Example: 5.10.252-SuiKernel-Experimental-Bridge
 export KERNEL_RELEASE_NAME="${LINUX_VERSION}${INTERNAL_BRAND}"
 
 # Apply branding-specific modifications from your snippet
@@ -164,7 +173,7 @@ text=$(
 *Linux Version*: $LINUX_VERSION
 *Branch*: $BRANCH_TAG
 *Runner*: $RUNNER_NAME
-*KernelSU*: KWS | $KSU_VERSION
+*Root Method*: $ROOT_METHOD | ${BRIDGE_VERSION:-None}
 *Compiler*: $COMPILER_STRING
 *Kakangku*: 100
 EOF
@@ -226,7 +235,8 @@ fi
 if [[ $STATUS != "BETA" ]]; then
   (
     echo "LINUX_VERSION=$LINUX_VERSION"
-    echo "KWS_VERSION=$(gh api repos/KOWX712/KernelSU/tags --jq '.[0].name')"
+        echo "BRIDGE_VERSION=${BRIDGE_VERSION:-Vanilla}"
+    echo "ROOT_METHOD=$ROOT_METHOD"
     echo "KERNEL_NAME=$KERNEL_NAME"
     echo "RELEASE_REPO=$(simplify_gh_url "$GKI_RELEASES_REPO")"
     echo "COMPILER_STRING=$COMPILER_STRING"
@@ -244,7 +254,12 @@ CAPTION=$(cat << EOF
 Build Time: $BUILD_TIME_STR
 Build By: $RUNNER_NAME
 Kakangku: 100
-KowSU Manager: https://t.me/kowsu\_build
+Bridge Supports:
+- KernelSU
+- KernelSU Next
+- ReSukiSU
+- SukiSU Ultra
+- FolkPatch / APatch
 EOF
 )
 

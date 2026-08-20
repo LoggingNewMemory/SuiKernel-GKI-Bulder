@@ -77,10 +77,8 @@ install_ksu() {
     exit 1
   fi
 
-  # Set ref to latest tag if ref is zero
-  LATEST_TAG=$(gh api "repos/$REPO/tags" --jq '.[0].name')
   if [[ -z "$REF" ]]; then
-    REF="$LATEST_TAG"
+    REF="main"
   fi
 
   URL="https://raw.githubusercontent.com/$REPO/$REF/kernel/setup.sh"
@@ -91,7 +89,12 @@ install_ksu() {
   fi
   bash ksu_setup.sh "$REF"
   rm -f ksu_setup.sh
-  export KSU_VERSION="$LATEST_TAG"
+  
+  if [ -f "KernelSU/VERSION.txt" ]; then
+    export BRIDGE_VERSION="$(cat KernelSU/VERSION.txt)"
+  else
+    export BRIDGE_VERSION="$REF"
+  fi
 }
 
 # ksu_included() function
