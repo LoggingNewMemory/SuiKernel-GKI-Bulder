@@ -1,4 +1,4 @@
-name: SuiKernel Single
+name: SuiKernel Double
 
 on:
   workflow_call:
