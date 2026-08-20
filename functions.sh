@@ -91,9 +91,11 @@ install_ksu() {
   rm -f ksu_setup.sh
   
   if [ -f "KernelSU/VERSION.txt" ]; then
-    export BRIDGE_VERSION="$(cat KernelSU/VERSION.txt)"
+    export BRIDGE_VERSION="$(head -n 1 KernelSU/VERSION.txt)"
+    export MANAGER_VERSIONS="$(tail -n +3 KernelSU/VERSION.txt)"
   else
     export BRIDGE_VERSION="$REF"
+    export MANAGER_VERSIONS=""
   fi
 }
 

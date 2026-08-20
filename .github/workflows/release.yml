@@ -54,7 +54,14 @@ jobs:
 
               if [[ -n "$key" && -n "$value" ]]; then
                 echo "Setting: $key=$value"
-                echo "$key=$value" >> $GITHUB_ENV
+                if [[ "$key" == "MANAGER_VERSIONS_B64" ]]; then
+                  echo "MANAGER_VERSIONS<<EOF" >> $GITHUB_ENV
+                  echo "$value" | base64 -d >> $GITHUB_ENV
+                  echo "" >> $GITHUB_ENV
+                  echo "EOF" >> $GITHUB_ENV
+                else
+                  echo "$key=$value" >> $GITHUB_ENV
+                fi
               fi
             done < "$info_file"
             echo "Variables extracted successfully"
@@ -121,11 +128,7 @@ jobs:
             -> Compiler: ${{ env.COMPILER_STRING }}
             -> Kakangku: 100
 
-            Bridge Supports:
-            - KernelSU
-            - KernelSU Next
-            - ReSukiSU
-            - SukiSU Ultra
+            ${{ env.MANAGER_VERSIONS }}
             - FolkPatch / APatch
 
             ### Changelogs

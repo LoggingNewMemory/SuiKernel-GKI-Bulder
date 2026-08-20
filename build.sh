@@ -176,6 +176,8 @@ text=$(
 *Root Method*: $ROOT_METHOD | ${BRIDGE_VERSION:-None}
 *Compiler*: $COMPILER_STRING
 *Kakangku*: 100
+
+${MANAGER_VERSIONS}
 EOF
 )
 MESSAGE_ID=$(send_msg "$text" 2>&1 | jq -r .result.message_id)
@@ -235,11 +237,12 @@ fi
 if [[ $STATUS != "BETA" ]]; then
   (
     echo "LINUX_VERSION=$LINUX_VERSION"
-        echo "BRIDGE_VERSION=${BRIDGE_VERSION:-Vanilla}"
+    echo "BRIDGE_VERSION=${BRIDGE_VERSION:-Vanilla}"
     echo "ROOT_METHOD=$ROOT_METHOD"
     echo "KERNEL_NAME=$KERNEL_NAME"
     echo "RELEASE_REPO=$(simplify_gh_url "$GKI_RELEASES_REPO")"
     echo "COMPILER_STRING=$COMPILER_STRING"
+    echo "MANAGER_VERSIONS_B64=$(echo "$MANAGER_VERSIONS" | base64 -w 0)"
   ) >> $workdir/artifacts/info.txt
 fi
 
@@ -254,11 +257,7 @@ CAPTION=$(cat << EOF
 Build Time: $BUILD_TIME_STR
 Build By: $RUNNER_NAME
 Kakangku: 100
-Bridge Supports:
-- KernelSU
-- KernelSU Next
-- ReSukiSU
-- SukiSU Ultra
+${MANAGER_VERSIONS}
 - FolkPatch / APatch
 EOF
 )
