@@ -104,8 +104,8 @@ if grep -q "builtin_allowlist.h" "$ALLOWLIST_C"; then
 else
     log "  Patching $ALLOWLIST_C..."
 
-    # 2a. Inject #include right after the existing app_profile.h include
-    sed -i 's|#include "policy/app_profile.h"|#include "policy/app_profile.h"\n#include "policy/builtin_allowlist.h"|' "$ALLOWLIST_C"
+    # 2a. Inject #include right after the existing allowlist.h include
+    sed -i 's|#include "policy/allowlist.h"|#include "policy/allowlist.h"\n#include "policy/builtin_allowlist.h"|' "$ALLOWLIST_C"
 
     # 2b. Inject builtin fast-path into __ksu_is_allow_uid(), just before "return false;"
     #     We target the last "return false;" inside the function (after the rcu loop).
@@ -118,119 +118,107 @@ with open(path, 'r') as f:
     src = f.read()
 
 # The injection marker: the closing of __ksu_is_allow_uid's rcu block
-OLD = '''\
-    rcu_read_unlock();
+OLD_PATTERN = re.compile(r"(\s*)rcu_read_unlock\(\);\n\n\s*return false;\n\}\n\nbool __ksu_is_allow_uid_for_current")
 
-    return false;
-}
+def repl1(m):
+    i = m.group(1)
+    return f"""{i}rcu_read_unlock();
 
-bool __ksu_is_allow_uid_for_current'''
+{i}/* Builtin fast-path: grant root to any UID whose package name is in
+{i} * the compile-time ksu_builtin_allowed_apps list. */
+{i}rcu_read_lock();
+{i}hash_for_each_possible_rcu (allow_list, p, list, uid) {{
+{i}    if (uid == p->profile.curr_uid &&
+{i}        ksu_is_builtin_allowed_package(p->profile.key)) {{
+{i}        rcu_read_unlock();
+{i}        return true;
+{i}    }}
+{i}}}
+{i}rcu_read_unlock();
 
-NEW = '''\
-    rcu_read_unlock();
+{i}return false;
+}}
 
-    /* Builtin fast-path: grant root to any UID whose package name is in
-     * the compile-time ksu_builtin_allowed_apps list. */
-    rcu_read_lock();
-    hash_for_each_possible_rcu (allow_list, p, list, uid) {
-        if (uid == p->profile.curr_uid &&
-            ksu_is_builtin_allowed_package(p->profile.key)) {
-            rcu_read_unlock();
-            return true;
-        }
-    }
-    rcu_read_unlock();
+bool __ksu_is_allow_uid_for_current"""
 
-    return false;
-}
-
-bool __ksu_is_allow_uid_for_current'''
-
-if OLD not in src:
+if not OLD_PATTERN.search(src):
     print("[AutoGrantApp] WARNING: Could not find injection point in __ksu_is_allow_uid(). Skipping fast-path.")
-    sys.exit(0)
-
-src = src.replace(OLD, NEW, 1)
+else:
+    src = OLD_PATTERN.sub(repl1, src, count=1)
 
 # Seed builtin apps inside ksu_load_allow_list(), just before the final
 # ksu_show_allow_list() + filp_close() block.
-OLD2 = '''\
-    ksu_show_allow_list();
-    filp_close(fp, 0);
-    if (version < KSU_APP_PROFILE_VER)
-        ksu_persistent_allow_list();
-    return;
+OLD2_PATTERN = re.compile(r"(\s*)ksu_show_allow_list\(\);\n\s*filp_close\(fp, 0\);\n\s*if \(version < KSU_APP_PROFILE_VER\)\n\s*ksu_persistent_allow_list\(\);\n\s*return;\n\nexit:")
 
-exit:'''
+def repl2(m):
+    i = m.group(1)
+    return f"""{i}/* Seed builtin allowed apps — always granted root regardless of what
+{i} * the on-disk allowlist says. Existing entries get their allow_su
+{i} * flag forced to true; new entries are inserted with UID=0 as a
+{i} * placeholder (ksud will fill in the real UID on next app sync). */
+{i}{{
+{i}    size_t bi;
+{i}    kernel_cap_t full_cap = CAP_FULL_SET;
+{i}
+{i}    for (bi = 0; bi < KSU_BUILTIN_ALLOWED_COUNT; bi++) {{
+{i}        struct app_profile builtin_profile;
+{i}        bool found = false;
+{i}        struct perm_data *bp;
+{i}
+{i}        rcu_read_lock();
+{i}        hash_for_each_possible_rcu (allow_list, bp, list, 0) {{
+{i}            if (strncmp(bp->profile.key,
+{i}                        ksu_builtin_allowed_apps[bi].package,
+{i}                        KSU_MAX_PACKAGE_NAME) == 0) {{
+{i}                found = true;
+{i}                break;
+{i}            }}
+{i}        }}
+{i}        rcu_read_unlock();
+{i}
+{i}        if (found) {{
+{i}            if (!bp->profile.allow_su) {{
+{i}                bp->profile.allow_su = true;
+{i}                bp->profile.rp_config.use_default = true;
+{i}                pr_info("builtin_allowlist: upgraded %s to allow_su\\n",
+{i}                        ksu_builtin_allowed_apps[bi].package);
+{i}            }}
+{i}            continue;
+{i}        }}
+{i}
+{i}        memset(&builtin_profile, 0, sizeof(builtin_profile));
+{i}        builtin_profile.version = KSU_APP_PROFILE_VER;
+{i}        strscpy(builtin_profile.key,
+{i}                ksu_builtin_allowed_apps[bi].package,
+{i}                KSU_MAX_PACKAGE_NAME);
+{i}        builtin_profile.curr_uid              = 0;
+{i}        builtin_profile.allow_su              = true;
+{i}        builtin_profile.rp_config.use_default = true;
+{i}        memcpy(&builtin_profile.rp_config.profile.capabilities.effective,
+{i}               &full_cap, sizeof(__u64));
+{i}        memcpy(&builtin_profile.rp_config.profile.capabilities.permitted,
+{i}               &full_cap, sizeof(__u64));
+{i}        strscpy(builtin_profile.rp_config.profile.selinux_domain,
+{i}                KSU_DEFAULT_SELINUX_DOMAIN, KSU_SELINUX_DOMAIN);
+{i}
+{i}        pr_info("builtin_allowlist: seeding %s\\n",
+{i}                ksu_builtin_allowed_apps[bi].package);
+{i}        ksu_set_app_profile(&builtin_profile);
+{i}    }}
+{i}}}
+{i}
+{i}ksu_show_allow_list();
+{i}filp_close(fp, 0);
+{i}if (version < KSU_APP_PROFILE_VER)
+{i}    ksu_persistent_allow_list();
+{i}return;
+{i}
+{i}exit:"""
 
-NEW2 = '''\
-    /* Seed builtin allowed apps — always granted root regardless of what
-     * the on-disk allowlist says. Existing entries get their allow_su
-     * flag forced to true; new entries are inserted with UID=0 as a
-     * placeholder (ksud will fill in the real UID on next app sync). */
-    {
-        size_t bi;
-        kernel_cap_t full_cap = CAP_FULL_SET;
-
-        for (bi = 0; bi < KSU_BUILTIN_ALLOWED_COUNT; bi++) {
-            struct app_profile builtin_profile;
-            bool found = false;
-            struct perm_data *bp;
-
-            rcu_read_lock();
-            hash_for_each_possible_rcu (allow_list, bp, list, 0) {
-                if (strncmp(bp->profile.key,
-                            ksu_builtin_allowed_apps[bi].package,
-                            KSU_MAX_PACKAGE_NAME) == 0) {
-                    found = true;
-                    break;
-                }
-            }
-            rcu_read_unlock();
-
-            if (found) {
-                if (!bp->profile.allow_su) {
-                    bp->profile.allow_su = true;
-                    bp->profile.rp_config.use_default = true;
-                    pr_info("builtin_allowlist: upgraded %s to allow_su\\n",
-                            ksu_builtin_allowed_apps[bi].package);
-                }
-                continue;
-            }
-
-            memset(&builtin_profile, 0, sizeof(builtin_profile));
-            builtin_profile.version = KSU_APP_PROFILE_VER;
-            strscpy(builtin_profile.key,
-                    ksu_builtin_allowed_apps[bi].package,
-                    KSU_MAX_PACKAGE_NAME);
-            builtin_profile.curr_uid              = 0;
-            builtin_profile.allow_su              = true;
-            builtin_profile.rp_config.use_default = true;
-            memcpy(&builtin_profile.rp_config.profile.capabilities.effective,
-                   &full_cap, sizeof(__u64));
-            memcpy(&builtin_profile.rp_config.profile.capabilities.permitted,
-                   &full_cap, sizeof(__u64));
-            strscpy(builtin_profile.rp_config.profile.selinux_domain,
-                    KSU_DEFAULT_SELINUX_DOMAIN, KSU_SELINUX_DOMAIN);
-
-            pr_info("builtin_allowlist: seeding %s\\n",
-                    ksu_builtin_allowed_apps[bi].package);
-            ksu_set_app_profile(&builtin_profile);
-        }
-    }
-
-    ksu_show_allow_list();
-    filp_close(fp, 0);
-    if (version < KSU_APP_PROFILE_VER)
-        ksu_persistent_allow_list();
-    return;
-
-exit:'''
-
-if OLD2 not in src:
+if not OLD2_PATTERN.search(src):
     print("[AutoGrantApp] WARNING: Could not find ksu_load_allow_list injection point. Skipping seed block.")
 else:
-    src = src.replace(OLD2, NEW2, 1)
+    src = OLD2_PATTERN.sub(repl2, src, count=1)
 
 with open(path, 'w') as f:
     f.write(src)
