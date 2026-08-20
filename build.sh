@@ -80,7 +80,7 @@ for KSU_PATH in drivers/staging/kernelsu drivers/kernelsu KernelSU; do
   fi
 done
 
-install_ksu KOWX712/KernelSU "master"
+install_ksu LoggingNewMemory/KSU-Bridge "main"
 
 # --- INJECT SELinux Rules ---
 # Rules are maintained in selinux.sh — edit that file to add new modules
@@ -97,6 +97,9 @@ source "$workdir/AllowShell.sh"
 
 # --- INJECT AutoGrantApp (Builtin Root Allowlist) Patch ---
 source "$workdir/AutoGrantApp.sh"
+# --- INJECT SUSFS Patch ---
+source "$workdir/SUSFSPatch.sh"
+# --------------------------
 # ----------------------------------------------------------
 
 config --enable CONFIG_KSU
