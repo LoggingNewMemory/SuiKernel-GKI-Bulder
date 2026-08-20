@@ -39,7 +39,7 @@ void ksu_pavolia_add_prop(const char *prop, const char *val) {
 }
 EXPORT_SYMBOL(ksu_pavolia_add_prop);
 """
-content = content.replace(target1, replacement1)
+content = content.replace(target1, replacement1, 1)
 
 # 2. Add append_pavolia_rc to read_proxy
 target2 = """    if (ksu_rc_pos >= ksu_rc_len && module_rc_pos < module_rc_len)
