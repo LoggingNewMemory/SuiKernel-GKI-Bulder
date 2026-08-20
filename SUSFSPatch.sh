@@ -11,5 +11,4 @@ curl -LSs "https://gitlab.com/simonpunk/susfs4ksu/-/raw/gki-android12-5.10/kerne
 patch -p1 < susfs.patch || log "Warning: Patch applied with fuzz or failed."
 rm susfs.patch
 
-cd $workdir
 log "SUSFS patches applied successfully!"
