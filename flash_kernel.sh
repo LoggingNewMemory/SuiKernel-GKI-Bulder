@@ -94,9 +94,9 @@ if [ "$ROOT_AVAILABLE" = true ]; then
     echo "Done! Rebooting device now..."
     adb reboot
 else
-    echo "This device is unrooted. We will flash via ADB Sideload in Recovery."
-    echo "Rebooting device to recovery mode..."
-    adb reboot recovery
+    echo "This device is unrooted. We will flash via ADB Sideload in sideload."
+    echo "Rebooting device to sideload mode..."
+    adb reboot sideload
     
     echo "=========================================================="
     echo " PLEASE PUT YOUR DEVICE IN SIDELOAD MODE NOW"
