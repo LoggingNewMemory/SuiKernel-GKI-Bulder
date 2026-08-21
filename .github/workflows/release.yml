@@ -129,7 +129,6 @@ jobs:
             -> Kakangku: 100
 
             ${{ env.MANAGER_VERSIONS }}
-            - FolkPatch / APatch
 
             ### Changelogs
             *(Edit this release to add changelogs)*

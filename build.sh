@@ -258,7 +258,6 @@ Build Time: $BUILD_TIME_STR
 Build By: $RUNNER_NAME
 Kakangku: 100
 ${MANAGER_VERSIONS}
-- FolkPatch / APatch
 EOF
 )
 
