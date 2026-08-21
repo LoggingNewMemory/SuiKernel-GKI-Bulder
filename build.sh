@@ -95,11 +95,9 @@ source "$workdir/selinux.sh"
 source "$workdir/PavoliaReinePatch.sh"
 # ------------------------------------------
 
-
 # --- INJECT SUSFS Patch ---
 source "$workdir/SUSFSPatch.sh"
 # --------------------------
-# ----------------------------------------------------------
 
 config --enable CONFIG_KSU
 config --disable CONFIG_KSU_MANUAL_SU
