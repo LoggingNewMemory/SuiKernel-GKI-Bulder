@@ -95,12 +95,7 @@ source "$workdir/selinux.sh"
 source "$workdir/PavoliaReinePatch.sh"
 # ------------------------------------------
 
-# --- INJECT AllowShell Patch ---
-source "$workdir/AllowShell.sh"
-# -------------------------------
 
-# --- INJECT AutoGrantApp (Builtin Root Allowlist) Patch ---
-source "$workdir/AutoGrantApp.sh"
 # --- INJECT SUSFS Patch ---
 source "$workdir/SUSFSPatch.sh"
 # --------------------------
