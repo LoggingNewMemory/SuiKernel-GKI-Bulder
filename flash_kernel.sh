@@ -115,7 +115,4 @@ else
     
     echo "Device is now in sideload mode! Sideloading $INPUT_ZIP..."
     adb sideload "$INPUT_ZIP"
-    
-    echo "Sideload complete! Rebooting device..."
-    adb reboot
 fi
