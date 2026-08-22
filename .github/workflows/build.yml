@@ -47,13 +47,28 @@ on:
           - "Vanilla"
 
 jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - id: set-matrix
+        run: |
+          if [[ "${{ inputs.BUILD_TARGET }}" == "Vanilla" ]]; then
+            echo 'matrix=["Vanilla"]' >> $GITHUB_OUTPUT
+          elif [[ "${{ inputs.BUILD_TARGET }}" == "KernelSU-Next" ]]; then
+            echo 'matrix=["KernelSU-Next"]' >> $GITHUB_OUTPUT
+          else
+            echo 'matrix=["KernelSU-Next", "Vanilla"]' >> $GITHUB_OUTPUT
+          fi
+
   build:
-    if: inputs.BUILD_TARGET == 'Both' || inputs.BUILD_TARGET == matrix.root_method || inputs.BUILD_TARGET == '' || inputs.BUILD_TARGET == null
+    needs: setup
     strategy:
       fail-fast: false
       max-parallel: 1
       matrix:
-        root_method: [KernelSU-Next, Vanilla]
+        root_method: ${{ fromJSON(needs.setup.outputs.matrix) }}
     runs-on: ${{ (inputs.RUNNER_TYPE == 'server-hive' || inputs.RUNNER_TYPE == 'kaela-build') && 'self-hosted' || inputs.RUNNER_TYPE }}
 
     steps:
