@@ -182,10 +182,8 @@ text=$(
 *SUSFS Version*: $SUSFS_VERSION
 *Compiler*: clang $CLANG_VERSION
 *Kakangku*: 100
-
-Note: $ROOT_METHOD | ${KSU_VERSION:-None}
-SUSFS: $SUSFS_VERSION
-Clang: $CLANG_VERSION
+*SUSFS*: $SUSFS_VERSION
+*Clang*: $CLANG_VERSION
 EOF
 )
 MESSAGE_ID=$(send_msg "$text" 2>&1 | jq -r .result.message_id)

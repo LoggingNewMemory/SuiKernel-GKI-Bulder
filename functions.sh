@@ -90,8 +90,10 @@ install_ksu() {
   bash ksu_setup.sh "$REF"
   rm -f ksu_setup.sh
   
-  if [ -d "KernelSU/.git" ]; then
-    export KSU_VERSION="$(git -C KernelSU describe --tags --abbrev=0 2>/dev/null || echo "$REF")"
+  local REPO_NAME="${REPO#*/}"
+
+  if [ -d "$REPO_NAME/.git" ]; then
+    export KSU_VERSION="$(git -C "$REPO_NAME" describe --tags --abbrev=0 2>/dev/null || echo "$REF")"
   else
     export KSU_VERSION="$REF"
   fi
