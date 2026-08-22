@@ -16,7 +16,7 @@ on:
 
 jobs:
   build:
-    name: Build Bridge variant
+    name: Build KernelSU-Next variant
     uses: ./.github/workflows/build.yml
     secrets: inherit
     with:
@@ -72,7 +72,7 @@ jobs:
             echo "KERNEL_NAME=SuiKernel" >> $GITHUB_ENV
             echo "LINUX_VERSION=5.10" >> $GITHUB_ENV
             echo "BRIDGE_VERSION=unknown" >> $GITHUB_ENV
-            echo "ROOT_METHOD=KSU-Bridge" >> $GITHUB_ENV
+            echo "ROOT_METHOD=KernelSU-Next" >> $GITHUB_ENV
             echo "COMPILER_STRING=Unknown Compiler" >> $GITHUB_ENV
             echo "RELEASE_REPO=LoggingNewMemory/SuiKernel-Releases" >> $GITHUB_ENV
 
@@ -124,7 +124,7 @@ jobs:
           body: |
             ## ${{ env.RELEASE_TAG }} Builds
             -> Linux ${{ env.LINUX_VERSION }} (android12-5.10-lts)
-            -> Universal Build: KSU-Bridge (${{ env.BRIDGE_VERSION }}) & Vanilla
+            -> Universal Build: KernelSU-Next (${{ env.BRIDGE_VERSION }}) & Vanilla
             -> Compiler: ${{ env.COMPILER_STRING }}
             -> Kakangku: 100
 

@@ -27,7 +27,7 @@ cd $workdir
 
 # Set KernelSU Variant
 log "Setting KernelSU variant..."
-VARIANT="Bridge"
+VARIANT="KernelSU-Next"
 
 # Download Clang
 CLANG_DIR="$workdir/clang"
@@ -83,6 +83,10 @@ done
 if [[ "$ROOT_METHOD" == "Vanilla" ]]; then
   log "Skipping KernelSU integration (Vanilla Build)"
   VARIANT="Vanilla"
+elif [[ "$ROOT_METHOD" == "KernelSU-Next" ]]; then
+  log "Setting KernelSU Next variant..."
+  VARIANT="KernelSU-Next"
+  install_ksu KernelSU-Next/KernelSU-Next "next"
 else
   install_ksu LoggingNewMemory/KSU-Bridge "main"
 

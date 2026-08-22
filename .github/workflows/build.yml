@@ -41,7 +41,7 @@ jobs:
       fail-fast: false
       max-parallel: 1
       matrix:
-        root_method: [KSU-Bridge, Vanilla]
+        root_method: [KernelSU-Next, Vanilla]
     runs-on: ${{ (inputs.RUNNER_TYPE == 'server-hive' || inputs.RUNNER_TYPE == 'kaela-build') && 'self-hosted' || inputs.RUNNER_TYPE }}
 
     steps:
