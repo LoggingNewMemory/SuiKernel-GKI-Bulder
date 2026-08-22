@@ -14,6 +14,7 @@ on:
           - 'server-hive'
           - 'kaela-build'
 
+
 jobs:
   build:
     name: Build KernelSU-Next variant
@@ -74,6 +75,8 @@ jobs:
             echo "KSU_VERSION=unknown" >> $GITHUB_ENV
             echo "ROOT_METHOD=KernelSU-Next" >> $GITHUB_ENV
             echo "COMPILER_STRING=Unknown Compiler" >> $GITHUB_ENV
+            echo "SUSFS_VERSION=Unknown" >> $GITHUB_ENV
+            echo "CLANG_VERSION=Unknown" >> $GITHUB_ENV
             echo "RELEASE_REPO=LoggingNewMemory/SuiKernel-Releases" >> $GITHUB_ENV
 
             echo "Using default values to continue release process"
@@ -125,8 +128,10 @@ jobs:
             ## ${{ env.RELEASE_TAG }} Builds
             -> Linux ${{ env.LINUX_VERSION }} (android12-5.10-lts)
             -> Universal Build: KernelSU-Next (${{ env.KSU_VERSION }}) & Vanilla
-            -> Compiler: ${{ env.COMPILER_STRING }}
+            -> SUSFS Version: ${{ env.SUSFS_VERSION }}
+            -> Compiler: clang ${{ env.CLANG_VERSION }}
             -> Kakangku: 100
+
 
             ${{ env.MANAGER_VERSIONS }}
 

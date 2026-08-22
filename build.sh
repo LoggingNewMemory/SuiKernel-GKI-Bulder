@@ -251,6 +251,8 @@ if [[ $STATUS != "BETA" ]]; then
     echo "KERNEL_NAME=$KERNEL_NAME"
     echo "RELEASE_REPO=$(simplify_gh_url "$GKI_RELEASES_REPO")"
     echo "COMPILER_STRING=$COMPILER_STRING"
+    echo "SUSFS_VERSION=$SUSFS_VERSION"
+    echo "CLANG_VERSION=$CLANG_VERSION"
     echo "MANAGER_VERSIONS_B64=$(echo "$MANAGER_VERSIONS" | base64 -w 0)"
   ) >> $workdir/artifacts/info.txt
 fi
