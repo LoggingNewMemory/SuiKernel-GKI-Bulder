@@ -87,7 +87,6 @@ else
   log "Setting KernelSU Next variant..."
   VARIANT="KernelSU-Next"
   install_ksu KernelSU-Next/KernelSU-Next "next"
-fi
 
 # --- INJECT SELinux Rules ---
 # Rules are maintained in selinux.sh — edit that file to add new modules
