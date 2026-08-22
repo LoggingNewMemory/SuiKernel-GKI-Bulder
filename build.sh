@@ -83,12 +83,11 @@ done
 if [[ "$ROOT_METHOD" == "Vanilla" ]]; then
   log "Skipping KernelSU integration (Vanilla Build)"
   VARIANT="Vanilla"
-elif [[ "$ROOT_METHOD" == "KernelSU-Next" ]]; then
+else
   log "Setting KernelSU Next variant..."
   VARIANT="KernelSU-Next"
   install_ksu KernelSU-Next/KernelSU-Next "next"
-else
-  install_ksu LoggingNewMemory/KSU-Bridge "main"
+fi
 
 # --- INJECT SELinux Rules ---
 # Rules are maintained in selinux.sh — edit that file to add new modules
@@ -130,11 +129,11 @@ if grep -q "CONFIG_KANAGAWA_PERMISSIVE=y" "$DEFCONFIG_FILE"; then
 fi
 
 # This sets the string appended to the base kernel version for `uname -r`
-# Format Example: -SuiKernel-Experimental-Bridge
+# Format Example: -SuiKernel-Experimental-KernelSU-Next
 INTERNAL_BRAND="-${KERNEL_NAME}-${BRANCH_TAG}-${VARIANT}"
 
 # This defines the full user-facing name for zips and AnyKernel
-# Format Example: 5.10.252-SuiKernel-Experimental-Bridge
+# Format Example: 5.10.252-SuiKernel-Experimental-KernelSU-Next
 export KERNEL_RELEASE_NAME="${LINUX_VERSION}${INTERNAL_BRAND}"
 
 # Apply branding-specific modifications from your snippet
@@ -164,17 +163,30 @@ touch .scmversion
 # ---------------------
 
 # --- KOBO CHANGED THE MSG TEMPLATE HERE ---
+# Extract SUSFS version
+if grep -q "SUSFS_VERSION" $KSRC/include/linux/susfs.h 2>/dev/null; then
+    SUSFS_VERSION=$(grep -oP '#define SUSFS_VERSION "\K[^"]+' $KSRC/include/linux/susfs.h)
+else
+    SUSFS_VERSION="Unknown"
+fi
+
+# Extract Clang Version
+CLANG_VERSION=$(clang -v 2>&1 | head -n 1 | grep -oP 'clang version \K[0-9.]+')
+
 text=$(
   cat << EOF
 *==== SuiKernel Builder ====*
 *Linux Version*: $LINUX_VERSION
 *Branch*: $BRANCH_TAG
 *Runner*: $RUNNER_NAME
-*Root Method*: $ROOT_METHOD | ${BRIDGE_VERSION:-None}
-*Compiler*: $COMPILER_STRING
+*Root Method*: $ROOT_METHOD | ${KSU_VERSION:-None}
+*SUSFS Version*: $SUSFS_VERSION
+*Compiler*: clang $CLANG_VERSION
 *Kakangku*: 100
 
-${MANAGER_VERSIONS}
+Note: $ROOT_METHOD | ${KSU_VERSION:-None}
+SUSFS: $SUSFS_VERSION
+Clang: $CLANG_VERSION
 EOF
 )
 MESSAGE_ID=$(send_msg "$text" 2>&1 | jq -r .result.message_id)
@@ -234,7 +246,7 @@ fi
 if [[ $STATUS != "BETA" ]]; then
   (
     echo "LINUX_VERSION=$LINUX_VERSION"
-    echo "BRIDGE_VERSION=${BRIDGE_VERSION:-Vanilla}"
+    echo "KSU_VERSION=${KSU_VERSION:-Vanilla}"
     echo "ROOT_METHOD=$ROOT_METHOD"
     echo "KERNEL_NAME=$KERNEL_NAME"
     echo "RELEASE_REPO=$(simplify_gh_url "$GKI_RELEASES_REPO")"

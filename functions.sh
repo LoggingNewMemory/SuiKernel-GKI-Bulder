@@ -90,13 +90,12 @@ install_ksu() {
   bash ksu_setup.sh "$REF"
   rm -f ksu_setup.sh
   
-  if [ -f "KernelSU/VERSION.txt" ]; then
-    export BRIDGE_VERSION="$(head -n 1 KernelSU/VERSION.txt)"
-    export MANAGER_VERSIONS="$(tail -n +3 KernelSU/VERSION.txt)"
+  if [ -d "KernelSU/.git" ]; then
+    export KSU_VERSION="$(git -C KernelSU describe --tags --abbrev=0 2>/dev/null || echo "$REF")"
   else
-    export BRIDGE_VERSION="$REF"
-    export MANAGER_VERSIONS=""
+    export KSU_VERSION="$REF"
   fi
+  export MANAGER_VERSIONS=""
 }
 
 # ksu_included() function
