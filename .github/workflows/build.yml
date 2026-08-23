@@ -137,6 +137,7 @@ jobs:
           ./build.sh
 
       - name: Upload Artifacts (ZIP Only)
+        if: inputs.STATUS != 'BETA'
         id: upload-zip
         uses: actions/upload-artifact@v4
         with:
@@ -145,6 +146,7 @@ jobs:
             artifacts/*.zip
 
       - name: Upload Artifacts (Info File)
+        if: inputs.STATUS != 'BETA'
         uses: actions/upload-artifact@v4
         with:
           name: info-${{ matrix.root_method }}-${{ github.run_number }}
