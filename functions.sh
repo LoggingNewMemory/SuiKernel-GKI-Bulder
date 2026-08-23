@@ -134,12 +134,14 @@ log() {
 
 error() {
   echo -e "[ERROR] $*"
+  local LOG_NAME="Build ${VARIANT:-Unknown}.log"
+  cp "$workdir/build.log" "$workdir/$LOG_NAME"
   if [[ -n $MESSAGE_ID ]]; then
     reply_msg "$MESSAGE_ID" "ERROR: $*"
-    reply_file "$MESSAGE_ID" "$workdir/build.log"
+    reply_file "$MESSAGE_ID" "$workdir/$LOG_NAME"
   else
     send_msg "ERROR: $*"
-    upload_file "$workdir/build.log"
+    upload_file "$workdir/$LOG_NAME"
   fi
   exit 1
 }
