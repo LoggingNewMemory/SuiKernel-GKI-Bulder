@@ -279,7 +279,7 @@ else
 fi
 
 # Always send the build log on success, regardless of status
-cp "$workdir/build.log" "$workdir/Build ${VARIANT}.log"
-reply_file "$MESSAGE_ID" "$workdir/Build ${VARIANT}.log"
+cp "$workdir/build.log" "$workdir/BuildLog-${VARIANT}.log"
+reply_file "$MESSAGE_ID" "$workdir/BuildLog-${VARIANT}.log"
 
 exit 0

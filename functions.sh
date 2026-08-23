@@ -26,7 +26,7 @@ reply_file() {
   if ! [[ -f $FILE ]]; then
     error "file $FILE doesn't exist"
   fi
-  chmod 777 $FILE
+  chmod 777 "$FILE"
   
   if [[ -n "$CAPTION" ]]; then
     curl -s -F document=@"$FILE" "https://api.telegram.org/bot$TG_BOT_TOKEN/sendDocument" \
@@ -134,7 +134,7 @@ log() {
 
 error() {
   echo -e "[ERROR] $*"
-  local LOG_NAME="Build ${VARIANT:-Unknown}.log"
+  local LOG_NAME="BuildLog-${VARIANT:-Unknown}.log"
   cp "$workdir/build.log" "$workdir/$LOG_NAME"
   if [[ -n $MESSAGE_ID ]]; then
     reply_msg "$MESSAGE_ID" "ERROR: $*"
