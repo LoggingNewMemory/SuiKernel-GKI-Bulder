@@ -93,7 +93,8 @@ inject_selinux "Ochinai Inaho Audio" \
 # Airani Iofifteen CPUSet — cpuset read/write
 # ---------------------------------------------------------------------------
 inject_selinux "Airani Iofifteen CPUSet" \
-    '    ksu_allow(db, "kernel", "cgroup", "dir", "search");\n\
+    '    ksu_allow(db, "kernel", "kernel", "capability", "dac_read_search");\n\
+    ksu_allow(db, "kernel", "cgroup", "dir", "search");\n\
     ksu_allow(db, "kernel", "cgroup", "dir", "write");\n\
     ksu_allow(db, "kernel", "cgroup", "dir", "getattr");\n\
     ksu_allow(db, "kernel", "cgroup", "file", "getattr");\n\
