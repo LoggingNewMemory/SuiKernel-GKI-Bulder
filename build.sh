@@ -83,30 +83,32 @@ done
 if [[ "$ROOT_METHOD" == "Vanilla" ]]; then
   log "Skipping KernelSU integration (Vanilla Build)"
   VARIANT="Vanilla"
+  
+  # --- INJECT SELinux Rules for Vanilla (YamadaKSUCore) ---
+  source "$workdir/selinux.sh"
+  
+  config --disable CONFIG_KSU
+  config --enable CONFIG_YAMADA_KSU_CORE
 else
   log "Setting KernelSU Next variant..."
   VARIANT="KernelSU-Next"
   install_ksu KernelSU-Next/KernelSU-Next "next"
 
-# --- INJECT SELinux Rules ---
-# Rules are maintained in selinux.sh — edit that file to add new modules
-source "$workdir/selinux.sh"
-# ------------------------------------------
+  # --- INJECT SELinux Rules ---
+  # Rules are maintained in selinux.sh — edit that file to add new modules
+  source "$workdir/selinux.sh"
+  # ------------------------------------------
 
-# --- INJECT Pavolia Reine KernelSU Patch ---
-source "$workdir/PavoliaReinePatch.sh"
-# ------------------------------------------
+  # --- INJECT Pavolia Reine KernelSU Patch ---
+  source "$workdir/PavoliaReinePatch.sh"
+  # ------------------------------------------
 
-# --- INJECT SUSFS Patch ---
-source "$workdir/SUSFSPatch.sh"
-# --------------------------
+  # --- INJECT SUSFS Patch ---
+  source "$workdir/SUSFSPatch.sh"
+  # --------------------------
 
-config --enable CONFIG_KSU
-config --disable CONFIG_KSU_MANUAL_SU
-fi
-
-if [[ "$ROOT_METHOD" == "Vanilla" ]]; then
-  config --disable CONFIG_KSU
+  config --enable CONFIG_KSU
+  config --disable CONFIG_KSU_MANUAL_SU
 fi
 
 # ---

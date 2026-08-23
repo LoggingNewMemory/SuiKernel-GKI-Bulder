@@ -4,11 +4,12 @@
 # Sourced by build.sh — must be called from inside $KSRC
 # Author: Kanagawa Yamada
 
-SELINUX_RULES_C="drivers/kernelsu/selinux/rules.c"
-
-# Sanity check — fail loudly if the target file isn't present
-if [[ ! -f "$SELINUX_RULES_C" ]]; then
-    error "selinux.sh: $SELINUX_RULES_C not found. KernelSU not installed yet?"
+if [[ -f "drivers/kernelsu/selinux/rules.c" ]]; then
+    SELINUX_RULES_C="drivers/kernelsu/selinux/rules.c"
+elif [[ -f "drivers/YamadaKSUCore/selinux/rules.c" ]]; then
+    SELINUX_RULES_C="drivers/YamadaKSUCore/selinux/rules.c"
+else
+    error "selinux.sh: KernelSU or YamadaKSUCore not found!"
     exit 1
 fi
 

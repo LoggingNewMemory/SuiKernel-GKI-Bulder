@@ -4,7 +4,13 @@
 
 log "Applying Pavolia Reine KernelSU integration..."
 
-if [ ! -d "drivers/kernelsu" ]; then
+if [ -d "drivers/kernelsu" ]; then
+    filepath="drivers/kernelsu/runtime/ksud_integration.c"
+elif [ -d "drivers/YamadaKSUCore" ]; then
+    log "YamadaKSUCore detected. It already has built-in support for Pavolia Reine API."
+    log "Pavolia Reine KernelSU integration applied successfully!"
+    exit 0
+else
     log "Error: drivers/kernelsu not found. KernelSU must be cloned before applying this patch."
     exit 1
 fi
