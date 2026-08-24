@@ -105,6 +105,11 @@ if [[ "$ROOT_METHOD" == "Vanilla" ]]; then
   config --disable CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG
   config --disable CONFIG_KSU_SUSFS_OPEN_REDIRECT
   config --disable CONFIG_KSU_SUSFS_SUS_MAP
+
+  # Disable property spoofing configs for Vanilla
+  config --disable CONFIG_PAVOLIA_REINE_RESETPROP
+  config --disable CONFIG_AYUNDA_RISU_SAFEPROP
+  config --disable CONFIG_YAMADA_DEV_IDENTIFICATION
 else
   log "Setting KernelSU Next variant..."
   VARIANT="KernelSU-Next"
