@@ -43,7 +43,10 @@ jobs:
 
       - name: Extract variables from info.txt (Safe)
         run: |
-          info_file=$(find release_files -name "info.txt" -type f | head -1)
+          info_file=$(find release_files -path "*/info-KernelSU-Next-*/info.txt" -type f | head -1)
+          if [[ -z "$info_file" ]]; then
+            info_file=$(find release_files -name "info.txt" -type f | head -1)
+          fi
 
           if [[ -f "$info_file" ]]; then
             echo "Found info.txt at: $info_file"
@@ -128,7 +131,7 @@ jobs:
             ## ${{ env.RELEASE_TAG }} Builds
             -> Linux ${{ env.LINUX_VERSION }} (android12-5.10-lts)
             -> Universal Build: KernelSU-Next (${{ env.KSU_VERSION }}) & Vanilla
-            -> SUSFS Version: ${{ env.SUSFS_VERSION }}
+            -> SUSFS Version (KernelSU): ${{ env.SUSFS_VERSION }}
             -> Compiler: clang ${{ env.CLANG_VERSION }}
             -> Kakangku: 100
 

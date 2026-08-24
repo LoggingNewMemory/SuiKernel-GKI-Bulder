@@ -89,6 +89,22 @@ if [[ "$ROOT_METHOD" == "Vanilla" ]]; then
   
   config --disable CONFIG_KSU
   config --enable CONFIG_YAMADA_KSU_CORE
+  
+  # Disable SUSFS configs for Vanilla
+  config --disable CONFIG_KSU_SUSFS
+  config --disable CONFIG_KSU_SUSFS_SUS_PATH
+  config --disable CONFIG_KSU_SUSFS_SUS_MOUNT
+  config --disable CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT
+  config --disable CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT
+  config --disable CONFIG_KSU_SUSFS_SUS_KSTAT
+  config --disable CONFIG_KSU_SUSFS_SUS_OVERLAYFS
+  config --disable CONFIG_KSU_SUSFS_TRY_UMOUNT
+  config --disable CONFIG_KSU_SUSFS_SPOOF_UNAME
+  config --disable CONFIG_KSU_SUSFS_ENABLE_LOG
+  config --disable CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS
+  config --disable CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG
+  config --disable CONFIG_KSU_SUSFS_OPEN_REDIRECT
+  config --disable CONFIG_KSU_SUSFS_SUS_MAP
 else
   log "Setting KernelSU Next variant..."
   VARIANT="KernelSU-Next"
@@ -163,12 +179,11 @@ MODULE_SYMVERS="$KSRC/out/Module.symvers"
 touch .scmversion
 # ---------------------
 
-# --- KOBO CHANGED THE MSG TEMPLATE HERE ---
 # Extract SUSFS version
-if grep -q "SUSFS_VERSION" $KSRC/include/linux/susfs.h 2>/dev/null; then
+if [[ "$VARIANT" != "Vanilla" ]] && grep -q "SUSFS_VERSION" $KSRC/include/linux/susfs.h 2>/dev/null; then
     SUSFS_VERSION=$(grep -oP '#define SUSFS_VERSION "\K[^"]+' $KSRC/include/linux/susfs.h)
 else
-    SUSFS_VERSION="Unknown"
+    SUSFS_VERSION="None"
 fi
 
 # Extract Clang Version
@@ -181,12 +196,16 @@ text=$(
 *Branch*: $BRANCH_TAG
 *Runner*: $RUNNER_NAME
 *Root Method*: $ROOT_METHOD | ${KSU_VERSION:-None}
-*SUSFS Version*: $SUSFS_VERSION
 *Clang*: $CLANG_VERSION
 *Kakangku*: 100
-*SUSFS*: $SUSFS_VERSION
 EOF
 )
+
+if [[ "$VARIANT" != "Vanilla" ]]; then
+    text="$text
+*SUSFS Version*: $SUSFS_VERSION"
+fi
+
 MESSAGE_ID=$(send_msg "$text" 2>&1 | jq -r .result.message_id)
 
 # --- SAVE MSG ID FOR GITHUB WORKFLOW ---
