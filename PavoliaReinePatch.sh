@@ -38,8 +38,8 @@ ssize_t pavolia_rc_pos = 0;
 
 void ksu_pavolia_add_prop(const char *prop, const char *val) {
     char buf[256];
-    /* Using sys.boot_completed to inject when OS is ready */
-    snprintf(buf, sizeof(buf), "\\non property:sys.boot_completed=1\\n    exec u:r:su:s0 root root -- /data/adb/ksud resetprop -n %s '%s'\\n", prop, val);
+    /* Using post-fs-data to inject early */
+    snprintf(buf, sizeof(buf), "\\non post-fs-data\\n    exec u:r:su:s0 root root -- /data/adb/ksud resetprop -n %s \\"%s\\"\\n", prop, val);
     strlcat(pavolia_rc_buf, buf, sizeof(pavolia_rc_buf));
     pavolia_rc_len = strlen(pavolia_rc_buf);
 }
