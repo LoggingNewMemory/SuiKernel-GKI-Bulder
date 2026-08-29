@@ -14,10 +14,9 @@ on:
           - 'server-hive'
           - 'kaela-build'
 
-
 jobs:
   build:
-    name: Build KernelSU-Next variant
+    name: Build KernelSU-Next & Vanilla variants
     uses: ./.github/workflows/build.yml
     secrets: inherit
     with:
@@ -130,13 +129,12 @@ jobs:
           body: |
             ## ${{ env.RELEASE_TAG }} Builds
             -> Linux ${{ env.LINUX_VERSION }} (android12-5.10-lts)
-            -> Universal Build: KernelSU-Next (${{ env.KSU_VERSION }}) & Vanilla
-            -> SUSFS Version (KernelSU): ${{ env.SUSFS_VERSION }}
+            -> Build Variants: KernelSU-Next (${{ env.KSU_VERSION }}) & Vanilla
+            -> SUSFS Version (KernelSU-Next): ${{ env.SUSFS_VERSION }}
             -> Compiler: clang ${{ env.CLANG_VERSION }}
             -> Kakangku: 100
 
-
-            ${{ env.MANAGER_VERSIONS }}
+            Grab KernelSU Next Manager: https://github.com/KernelSU-Next/KernelSU-Next/releases
 
             ### Changelogs
             *(Edit this release to add changelogs)*
