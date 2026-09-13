@@ -168,3 +168,6 @@ jobs:
             -d text="$MSG" \
             -d parse_mode="Markdown" \
             -d disable_web_page_preview=true
+      - name: Cleanup Workspace
+        if: always()
+        run: sudo rm -rf *
