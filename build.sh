@@ -133,10 +133,6 @@ else
   cp -R "$SUSFS_PATCHES"/fs/* ./fs/
   cp -R "$SUSFS_PATCHES"/include/* ./include/
   patch -p1 < "$SUSFS_PATCHES"/50_add_susfs_in_gki-android12-5.10.patch || log "Warning: Patch applied with fuzz or failed."
-
-  # Fix implicit declaration of function 'susfs_sus_kstat_spoof_vfs_statfs'
-  sed -i '/extern int susfs_sus_kstat_spoof_vfs_statfs(struct inode \*inode, struct kstatfs \*buf, bool \*is_fuse);/d' ./fs/statfs.c
-  sed -i '/#ifdef CONFIG_KSU_SUSFS_SUS_KSTAT/a extern int susfs_sus_kstat_spoof_vfs_statfs(struct inode *inode, struct kstatfs *buf, bool *is_fuse);' ./fs/statfs.c
   # -----------------------
 
   config --enable CONFIG_KSU
