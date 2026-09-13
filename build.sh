@@ -326,6 +326,45 @@ else
   reply_file "$MESSAGE_ID" "$workdir/artifacts/$ZIP_NAME" "$CAPTION"
 fi
 
+# --- FETCH KERNELSU-NEXT MANAGER APKS ---
+if [[ "$VARIANT" == *"KernelSU-Next"* ]]; then
+  log "Fetching latest KernelSU-Next Manager APKs from dev branch..."
+  RUN_ID=$(curl -s -H "Authorization: Bearer $GH_TOKEN" "https://api.github.com/repos/KernelSU-Next/KernelSU-Next/actions/runs?branch=dev&status=success&per_page=1" | jq -r '.workflow_runs[0].id')
+  
+  if [ "$RUN_ID" != "null" ] && [ -n "$RUN_ID" ]; then
+    curl -s -H "Authorization: Bearer $GH_TOKEN" "https://api.github.com/repos/KernelSU-Next/KernelSU-Next/actions/runs/$RUN_ID/artifacts" > arts.json
+    M_URL=$(jq -r '.artifacts[] | select(.name == "manager") | .archive_download_url' arts.json)
+    S_URL=$(jq -r '.artifacts[] | select(.name == "manager-spoofed") | .archive_download_url' arts.json)
+    
+    mkdir -p $workdir/ksu_apks
+    
+    curl -sL -H "Authorization: Bearer $GH_TOKEN" "$M_URL" -o $workdir/manager.zip
+    unzip -q -o $workdir/manager.zip -d $workdir/ksu_apks/manager
+    M_APK=$(ls $workdir/ksu_apks/manager/*.apk | head -n 1)
+    mv "$M_APK" "$workdir/KernelSU-Next-Manager-dev.apk"
+    
+    curl -sL -H "Authorization: Bearer $GH_TOKEN" "$S_URL" -o $workdir/spoofed.zip
+    unzip -q -o $workdir/spoofed.zip -d $workdir/ksu_apks/spoofed
+    S_APK=$(ls $workdir/ksu_apks/spoofed/*.apk | head -n 1)
+    mv "$S_APK" "$workdir/KernelSU-Next-Manager-Spoofed-dev.apk"
+    
+    rm -rf $workdir/manager.zip $workdir/spoofed.zip $workdir/ksu_apks arts.json
+    
+    if [[ $STATUS != "BETA" ]]; then
+      mv "$workdir/KernelSU-Next-Manager-dev.apk" "$workdir/artifacts/"
+      mv "$workdir/KernelSU-Next-Manager-Spoofed-dev.apk" "$workdir/artifacts/"
+      reply_file "$MESSAGE_ID" "$workdir/artifacts/KernelSU-Next-Manager-dev.apk" "KernelSU-Next Manager (Normal)"
+      reply_file "$MESSAGE_ID" "$workdir/artifacts/KernelSU-Next-Manager-Spoofed-dev.apk" "KernelSU-Next Manager (Spoofed)"
+    else
+      reply_file "$MESSAGE_ID" "$workdir/KernelSU-Next-Manager-dev.apk" "KernelSU-Next Manager (Normal)"
+      reply_file "$MESSAGE_ID" "$workdir/KernelSU-Next-Manager-Spoofed-dev.apk" "KernelSU-Next Manager (Spoofed)"
+    fi
+  else
+    log "Warning: Failed to fetch KernelSU-Next artifacts!"
+  fi
+fi
+# ----------------------------------------
+
 # Always send the build log on success, regardless of status
 cp "$workdir/build.log" "$workdir/BuildLog-${VARIANT}.log"
 reply_file "$MESSAGE_ID" "$workdir/BuildLog-${VARIANT}.log"

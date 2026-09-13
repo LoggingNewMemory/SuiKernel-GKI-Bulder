@@ -136,13 +136,14 @@ jobs:
           chmod +x *.sh
           ./build.sh
 
-      - name: Upload Artifacts (ZIP Only)
+      - name: Upload Artifacts (Binaries)
         id: upload-zip
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.BASE_NAME }}-${{ github.run_number }}
           path: |
             artifacts/*.zip
+            artifacts/*.apk
 
       - name: Upload Artifacts (Info File)
         uses: actions/upload-artifact@v4
