@@ -142,6 +142,12 @@ data = data.replace("extern int susfs_sus_kstat_spoof_vfs_statfs(struct inode *i
 data = data.replace("#include \"internal.h\"", "#include \"internal.h\"\nextern int susfs_sus_kstat_spoof_vfs_statfs(struct inode *inode, struct kstatfs *buf, bool *is_fuse);")
 with open("./fs/statfs.c", "w") as f:
     f.write(data)
+
+with open("./fs/susfs.c", "r") as f:
+    data2 = f.read()
+data2 = data2.replace("#include <linux/fs.h>", "#include <linux/fs.h>\n#include <linux/security.h>")
+with open("./fs/susfs.c", "w") as f:
+    f.write(data2)
 '
   # -----------------------
 
