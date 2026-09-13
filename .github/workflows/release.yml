@@ -164,4 +164,6 @@ jobs:
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
       - name: Cleanup Workspace
         if: always()
-        run: sudo rm -rf *
+        run: |
+          git clean -ffdx
+          git reset --hard HEAD

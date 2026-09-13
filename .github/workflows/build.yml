@@ -171,4 +171,6 @@ jobs:
             -d disable_web_page_preview=true
       - name: Cleanup Workspace
         if: always()
-        run: sudo rm -rf *
+        run: |
+          git clean -ffdx
+          git reset --hard HEAD
