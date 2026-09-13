@@ -113,7 +113,7 @@ if [[ "$ROOT_METHOD" == "Vanilla" ]]; then
 else
   log "Setting KernelSU Next variant..."
   VARIANT="KernelSU-Next"
-  install_ksu KernelSU-Next/KernelSU-Next "next"
+  install_ksu pershoot/KernelSU-Next "dev-susfs"
 
   # --- INJECT SELinux Rules ---
   # Rules are maintained in selinux.sh — edit that file to add new modules
@@ -124,12 +124,20 @@ else
   source "$workdir/PavoliaReinePatch.sh"
   # ------------------------------------------
 
-  # --- INJECT SUSFS Patch ---
-  source "$workdir/SUSFSPatch.sh"
-  # --------------------------
+  # --- INTEGRATE SUSFS ---
+  log "Cloning and applying SUSFS patches..."
+  rm -rf "$workdir/susfs"
+  git clone --depth=1 -q https://gitlab.com/simonpunk/susfs4ksu -b gki-android12-5.10 "$workdir/susfs"
+  SUSFS_PATCHES="$workdir/susfs/kernel_patches"
+
+  cp -R "$SUSFS_PATCHES"/fs/* ./fs/
+  cp -R "$SUSFS_PATCHES"/include/* ./include/
+  patch -p1 < "$SUSFS_PATCHES"/50_add_susfs_in_gki-android12-5.10.patch || log "Warning: Patch applied with fuzz or failed."
+  # -----------------------
 
   config --enable CONFIG_KSU
   config --disable CONFIG_KSU_MANUAL_SU
+  config --enable CONFIG_KSU_SUSFS
 fi
 
 # ---
