@@ -16,5 +16,5 @@ KERNEL_DEFCONFIG="gki_defconfig"
 # Release repository
 GKI_RELEASES_REPO="https://github.com/LoggingNewMemory/SuiKernel-Release"
 # Clang
-CLANG_URL="https://github.com/LineageOS/android_prebuilts_clang_kernel_linux-x86_clang-r416183b"
-CLANG_BRANCH="lineage-20.0"
+CLANG_URL="https://android.googlesource.com/platform/prebuilts/clang/host/linux-x86/+archive/b669748458572622ed716407611633c5415da25c/clang-r416183b.tar.gz"
+CLANG_BRANCH=""
