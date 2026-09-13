@@ -113,7 +113,7 @@ if [[ "$ROOT_METHOD" == "Vanilla" ]]; then
 else
   log "Setting KernelSU Next variant..."
   VARIANT="KernelSU-Next"
-  install_ksu KernelSU-Next/KernelSU-Next "next"
+  install_ksu pershoot/KernelSU-Next "dev-susfs"
 
   # --- INJECT SELinux Rules ---
   # Rules are maintained in selinux.sh — edit that file to add new modules
@@ -124,12 +124,36 @@ else
   source "$workdir/PavoliaReinePatch.sh"
   # ------------------------------------------
 
-  # --- INJECT SUSFS Patch ---
-  source "$workdir/SUSFSPatch.sh"
-  # --------------------------
+  # --- INTEGRATE SUSFS ---
+  log "Cloning and applying SUSFS patches..."
+  rm -rf "$workdir/susfs"
+  git clone --depth=1 -q https://gitlab.com/simonpunk/susfs4ksu -b gki-android12-5.10 "$workdir/susfs"
+  SUSFS_PATCHES="$workdir/susfs/kernel_patches"
+
+  cp -R "$SUSFS_PATCHES"/fs/* ./fs/
+  cp -R "$SUSFS_PATCHES"/include/* ./include/
+  patch -p1 < "$SUSFS_PATCHES"/50_add_susfs_in_gki-android12-5.10.patch || log "Warning: Patch applied with fuzz or failed."
+
+  python3 -c '
+import sys
+with open("./fs/statfs.c", "r") as f:
+    data = f.read()
+data = data.replace("extern int susfs_sus_kstat_spoof_vfs_statfs(struct inode *inode, struct kstatfs *buf, bool *is_fuse);", "")
+data = data.replace("#include \"internal.h\"", "#include \"internal.h\"\nextern int susfs_sus_kstat_spoof_vfs_statfs(struct inode *inode, struct kstatfs *buf, bool *is_fuse);")
+with open("./fs/statfs.c", "w") as f:
+    f.write(data)
+
+with open("./fs/susfs.c", "r") as f:
+    data2 = f.read()
+data2 = data2.replace("#include <linux/fs.h>", "#include <linux/fs.h>\n#include <linux/security.h>")
+with open("./fs/susfs.c", "w") as f:
+    f.write(data2)
+'
+  # -----------------------
 
   config --enable CONFIG_KSU
   config --disable CONFIG_KSU_MANUAL_SU
+  config --enable CONFIG_KSU_SUSFS
 fi
 
 # ---
