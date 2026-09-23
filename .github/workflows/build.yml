@@ -17,6 +17,9 @@ on:
       BUILD_TARGET:
         type: string
         default: 'Both'
+      BUILD_PERMISSIVE:
+        type: boolean
+        default: false
 
   workflow_dispatch:
     inputs:
@@ -45,6 +48,10 @@ on:
           - "Both"
           - "KernelSU-Next"
           - "Vanilla"
+      BUILD_PERMISSIVE:
+        description: "Build Permissive Variant as well?"
+        type: boolean
+        default: false
 
 jobs:
   setup:
@@ -62,7 +69,11 @@ jobs:
           else
             echo 'matrix=["KernelSU-Next", "Vanilla"]' >> $GITHUB_OUTPUT
           fi
-          echo 'permissive_matrix=["Normal", "Permissive"]' >> $GITHUB_OUTPUT
+          if [[ "${{ inputs.BUILD_PERMISSIVE }}" == "true" ]]; then
+            echo 'permissive_matrix=["Normal", "Permissive"]' >> $GITHUB_OUTPUT
+          else
+            echo 'permissive_matrix=["Normal"]' >> $GITHUB_OUTPUT
+          fi
 
   build:
     needs: setup

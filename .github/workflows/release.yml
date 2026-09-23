@@ -24,6 +24,7 @@ jobs:
       RUNNER_TYPE: ${{ inputs.RUNNER_TYPE }}
       BUILD_BOOTIMG: "false"
       BRANCH_CHOICE: "suikernel-stable"
+      BUILD_PERMISSIVE: true
 
   release:
     name: Create Unified Release
