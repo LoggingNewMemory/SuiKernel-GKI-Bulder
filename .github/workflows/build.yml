@@ -51,6 +51,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+      permissive_matrix: ${{ steps.set-matrix.outputs.permissive_matrix }}
     steps:
       - id: set-matrix
         run: |
@@ -61,6 +62,7 @@ jobs:
           else
             echo 'matrix=["KernelSU-Next", "Vanilla"]' >> $GITHUB_OUTPUT
           fi
+          echo 'permissive_matrix=["Normal", "Permissive"]' >> $GITHUB_OUTPUT
 
   build:
     needs: setup
@@ -69,6 +71,7 @@ jobs:
       max-parallel: 1
       matrix:
         root_method: ${{ fromJSON(needs.setup.outputs.matrix) }}
+        permissive_mode: ${{ fromJSON(needs.setup.outputs.permissive_matrix) }}
     runs-on: ${{ (inputs.RUNNER_TYPE == 'server-hive' || inputs.RUNNER_TYPE == 'kaela-build') && 'self-hosted' || inputs.RUNNER_TYPE }}
 
     steps:
@@ -129,6 +132,7 @@ jobs:
           STATUS: ${{ inputs.STATUS }}
           KERNEL_BRANCH_ENV: ${{ inputs.BRANCH_CHOICE }}
           ROOT_METHOD: ${{ matrix.root_method }}
+          PERMISSIVE_MODE: ${{ matrix.permissive_mode }}
           RUNNER_TYPE: ${{ inputs.RUNNER_TYPE }}
           RUNNER_NAME: ${{ runner.name }}
         run: |
@@ -148,7 +152,7 @@ jobs:
       - name: Upload Artifacts (Info File)
         uses: actions/upload-artifact@v4
         with:
-          name: info-${{ matrix.root_method }}-${{ github.run_number }}
+          name: info-${{ matrix.root_method }}-${{ matrix.permissive_mode }}-${{ github.run_number }}
           path: artifacts/*.txt
 
       - name: Send Success Notification to Telegram (SUCCESS)

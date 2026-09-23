@@ -129,7 +129,7 @@ jobs:
           body: |
             ## ${{ env.RELEASE_TAG }} Builds
             -> Linux ${{ env.LINUX_VERSION }} (android12-5.10-lts)
-            -> Build Variants: KernelSU-Next (${{ env.KSU_VERSION }}) & Vanilla
+            -> Build Variants: KernelSU-Next (${{ env.KSU_VERSION }}) & Vanilla (Normal & Permissive)
             -> SUSFS Version (KernelSU-Next): ${{ env.SUSFS_VERSION }}
             -> Compiler: clang ${{ env.CLANG_VERSION }}
             -> Kakangku: 100
@@ -142,6 +142,7 @@ jobs:
             #### Notes
             -> This kernel only for GKI android12-5.10 device
             -> Aduh Kang... Kakangkuh
+            -> The -PERMISSIVE kernel is a Permissive kernel. It force Kernel to switch to Permissive, it will very useful when you debug ROMs and Porting ROMs, therefore it enables CONFIG_KANAGAWA_PERMISSIVE=y
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}

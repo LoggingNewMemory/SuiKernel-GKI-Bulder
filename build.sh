@@ -170,6 +170,12 @@ else
     BRANCH_TAG="Dev" # Fallback if another branch is used
 fi
 
+if [[ "$PERMISSIVE_MODE" == "Permissive" ]]; then
+    config --enable CONFIG_KANAGAWA_PERMISSIVE
+else
+    config --disable CONFIG_KANAGAWA_PERMISSIVE
+fi
+
 if grep -q "CONFIG_KANAGAWA_PERMISSIVE=y" "$DEFCONFIG_FILE"; then
     VARIANT="${VARIANT}-PERMISSIVE"
 fi
@@ -332,9 +338,8 @@ if [[ "$VARIANT" == *"KernelSU-Next"* ]]; then
   RUN_ID=$(curl -s -H "Authorization: Bearer $GH_TOKEN" "https://api.github.com/repos/KernelSU-Next/KernelSU-Next/actions/runs?branch=dev&status=success&per_page=1" | jq -r '.workflow_runs[0].id')
   
   if [ "$RUN_ID" != "null" ] && [ -n "$RUN_ID" ]; then
-    curl -s -H "Authorization: Bearer $GH_TOKEN" "https://api.github.com/repos/KernelSU-Next/KernelSU-Next/actions/runs/$RUN_ID/artifacts" > arts.json
-    M_URL=$(jq -r '.artifacts[] | select(.name == "manager") | .archive_download_url' arts.json)
-    S_URL=$(jq -r '.artifacts[] | select(.name == "manager-spoofed") | .archive_download_url' arts.json)
+    M_URL=$(curl -s -H "Authorization: Bearer $GH_TOKEN" "https://api.github.com/repos/KernelSU-Next/KernelSU-Next/actions/runs/$RUN_ID/artifacts?name=manager" | jq -r '.artifacts[0].archive_download_url')
+    S_URL=$(curl -s -H "Authorization: Bearer $GH_TOKEN" "https://api.github.com/repos/KernelSU-Next/KernelSU-Next/actions/runs/$RUN_ID/artifacts?name=manager-spoofed" | jq -r '.artifacts[0].archive_download_url')
     
     mkdir -p $workdir/ksu_apks
     
@@ -348,7 +353,7 @@ if [[ "$VARIANT" == *"KernelSU-Next"* ]]; then
     S_APK=$(ls $workdir/ksu_apks/spoofed/*.apk | head -n 1)
     mv "$S_APK" "$workdir/KernelSU-Next-Manager-Spoofed-dev.apk"
     
-    rm -rf $workdir/manager.zip $workdir/spoofed.zip $workdir/ksu_apks arts.json
+    rm -rf $workdir/manager.zip $workdir/spoofed.zip $workdir/ksu_apks
     
     if [[ $STATUS != "BETA" ]]; then
       mv "$workdir/KernelSU-Next-Manager-dev.apk" "$workdir/artifacts/"
