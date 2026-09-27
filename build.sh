@@ -113,7 +113,7 @@ if [[ "$ROOT_METHOD" == "Vanilla" ]]; then
 else
   log "Setting KernelSU Next variant..."
   VARIANT="KernelSU-Next"
-  install_ksu pershoot/KernelSU-Next "dev-susfs"
+  install_ksu KernelSU-Next/KernelSU-Next "dev"
 
   # --- INJECT SELinux Rules ---
   # Rules are maintained in selinux.sh — edit that file to add new modules
@@ -125,31 +125,7 @@ else
   # ------------------------------------------
 
   # --- INTEGRATE SUSFS ---
-  log "Cloning and applying SUSFS patches..."
-  rm -rf "$workdir/susfs"
-  git clone --depth=1 -q https://gitlab.com/simonpunk/susfs4ksu -b gki-android12-5.10 "$workdir/susfs"
-  SUSFS_PATCHES="$workdir/susfs/kernel_patches"
-
-  cp -R "$SUSFS_PATCHES"/fs/* ./fs/
-  cp -R "$SUSFS_PATCHES"/include/* ./include/
-  patch -p1 < "$SUSFS_PATCHES"/50_add_susfs_in_gki-android12-5.10.patch || log "Warning: Patch applied with fuzz or failed."
-
-  python3 -c '
-import sys
-with open("./fs/statfs.c", "r") as f:
-    data = f.read()
-data = data.replace("extern int susfs_sus_kstat_spoof_vfs_statfs(struct inode *inode, struct kstatfs *buf, bool *is_fuse);", "")
-data = data.replace("#include \"internal.h\"", "#include \"internal.h\"\nextern int susfs_sus_kstat_spoof_vfs_statfs(struct inode *inode, struct kstatfs *buf, bool *is_fuse);")
-with open("./fs/statfs.c", "w") as f:
-    f.write(data)
-
-with open("./fs/susfs.c", "r") as f:
-    data2 = f.read()
-data2 = data2.replace("#include <linux/fs.h>", "#include <linux/fs.h>\n#include <linux/security.h>")
-with open("./fs/susfs.c", "w") as f:
-    f.write(data2)
-'
-  # -----------------------
+  source "$workdir/SUSFSPatch.sh"
 
   config --enable CONFIG_KSU
   config --disable CONFIG_KSU_MANUAL_SU
@@ -334,35 +310,22 @@ fi
 
 # --- FETCH KERNELSU-NEXT MANAGER APKS ---
 if [[ "$VARIANT" == *"KernelSU-Next"* ]]; then
-  log "Fetching latest KernelSU-Next Manager APKs from dev branch..."
-  RUN_ID=$(curl -s -H "Authorization: Bearer $GH_TOKEN" "https://api.github.com/repos/KernelSU-Next/KernelSU-Next/actions/runs?branch=dev&status=success&per_page=1" | jq -r '.workflow_runs[0].id')
+  log "Fetching latest KernelSU-Next Manager APKs from releases..."
+  M_URL=$(curl -s https://api.github.com/repos/KernelSU-Next/KernelSU-Next/releases/latest | jq -r '.assets[] | select(.name | contains("-spoofed") | not) | select(.name | endswith(".apk")) | .browser_download_url')
+  S_URL=$(curl -s https://api.github.com/repos/KernelSU-Next/KernelSU-Next/releases/latest | jq -r '.assets[] | select(.name | contains("-spoofed")) | select(.name | endswith(".apk")) | .browser_download_url')
   
-  if [ "$RUN_ID" != "null" ] && [ -n "$RUN_ID" ]; then
-    M_URL=$(curl -s -H "Authorization: Bearer $GH_TOKEN" "https://api.github.com/repos/KernelSU-Next/KernelSU-Next/actions/runs/$RUN_ID/artifacts?name=manager" | jq -r '.artifacts[0].archive_download_url')
-    S_URL=$(curl -s -H "Authorization: Bearer $GH_TOKEN" "https://api.github.com/repos/KernelSU-Next/KernelSU-Next/actions/runs/$RUN_ID/artifacts?name=manager-spoofed" | jq -r '.artifacts[0].archive_download_url')
-    
-    mkdir -p $workdir/ksu_apks
-    
-    curl -sL -H "Authorization: Bearer $GH_TOKEN" "$M_URL" -o $workdir/manager.zip
-    unzip -q -o $workdir/manager.zip -d $workdir/ksu_apks/manager
-    M_APK=$(ls $workdir/ksu_apks/manager/*.apk | head -n 1)
-    mv "$M_APK" "$workdir/KernelSU-Next-Manager-dev.apk"
-    
-    curl -sL -H "Authorization: Bearer $GH_TOKEN" "$S_URL" -o $workdir/spoofed.zip
-    unzip -q -o $workdir/spoofed.zip -d $workdir/ksu_apks/spoofed
-    S_APK=$(ls $workdir/ksu_apks/spoofed/*.apk | head -n 1)
-    mv "$S_APK" "$workdir/KernelSU-Next-Manager-Spoofed-dev.apk"
-    
-    rm -rf $workdir/manager.zip $workdir/spoofed.zip $workdir/ksu_apks
+  if [ -n "$M_URL" ] && [ "$M_URL" != "null" ]; then
+    curl -sL "$M_URL" -o "$workdir/KernelSU-Next-Normal.apk"
+    curl -sL "$S_URL" -o "$workdir/KernelSU-Next-Spoofed.apk"
     
     if [[ $STATUS != "BETA" ]]; then
-      mv "$workdir/KernelSU-Next-Manager-dev.apk" "$workdir/artifacts/"
-      mv "$workdir/KernelSU-Next-Manager-Spoofed-dev.apk" "$workdir/artifacts/"
-      reply_file "$MESSAGE_ID" "$workdir/artifacts/KernelSU-Next-Manager-dev.apk" "KernelSU-Next Manager (Normal)"
-      reply_file "$MESSAGE_ID" "$workdir/artifacts/KernelSU-Next-Manager-Spoofed-dev.apk" "KernelSU-Next Manager (Spoofed)"
+      mv "$workdir/KernelSU-Next-Normal.apk" "$workdir/artifacts/"
+      mv "$workdir/KernelSU-Next-Spoofed.apk" "$workdir/artifacts/"
+      reply_file "$MESSAGE_ID" "$workdir/artifacts/KernelSU-Next-Normal.apk" "KernelSU-Next Manager (Normal)"
+      reply_file "$MESSAGE_ID" "$workdir/artifacts/KernelSU-Next-Spoofed.apk" "KernelSU-Next Manager (Spoofed)"
     else
-      reply_file "$MESSAGE_ID" "$workdir/KernelSU-Next-Manager-dev.apk" "KernelSU-Next Manager (Normal)"
-      reply_file "$MESSAGE_ID" "$workdir/KernelSU-Next-Manager-Spoofed-dev.apk" "KernelSU-Next Manager (Spoofed)"
+      reply_file "$MESSAGE_ID" "$workdir/KernelSU-Next-Normal.apk" "KernelSU-Next Manager (Normal)"
+      reply_file "$MESSAGE_ID" "$workdir/KernelSU-Next-Spoofed.apk" "KernelSU-Next Manager (Spoofed)"
     fi
   else
     log "Warning: Failed to fetch KernelSU-Next artifacts!"
