@@ -311,8 +311,8 @@ fi
 # --- FETCH KERNELSU-NEXT MANAGER APKS ---
 if [[ "$VARIANT" == *"KernelSU-Next"* ]]; then
   log "Fetching latest KernelSU-Next Manager APKs from releases..."
-  M_URL=$(curl -s https://api.github.com/repos/KernelSU-Next/KernelSU-Next/releases/latest | jq -r '.assets[] | select(.name | contains("-spoofed") | not) | select(.name | endswith(".apk")) | .browser_download_url')
-  S_URL=$(curl -s https://api.github.com/repos/KernelSU-Next/KernelSU-Next/releases/latest | jq -r '.assets[] | select(.name | contains("-spoofed")) | select(.name | endswith(".apk")) | .browser_download_url')
+  M_URL=$(curl -s -H "Authorization: Bearer $GH_TOKEN" https://api.github.com/repos/KernelSU-Next/KernelSU-Next/releases/latest | jq -r '.assets[] | select(.name | contains("-spoofed") | not) | select(.name | endswith(".apk")) | .browser_download_url')
+  S_URL=$(curl -s -H "Authorization: Bearer $GH_TOKEN" https://api.github.com/repos/KernelSU-Next/KernelSU-Next/releases/latest | jq -r '.assets[] | select(.name | contains("-spoofed")) | select(.name | endswith(".apk")) | .browser_download_url')
   
   if [ -n "$M_URL" ] && [ "$M_URL" != "null" ]; then
     curl -sL "$M_URL" -o "$workdir/KernelSU-Next-Normal.apk"
