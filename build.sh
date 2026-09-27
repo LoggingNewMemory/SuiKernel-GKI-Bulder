@@ -146,35 +146,16 @@ else
     BRANCH_TAG="Dev" # Fallback if another branch is used
 fi
 
-if [[ "$PERMISSIVE_MODE" == "Permissive" ]]; then
-    config --enable CONFIG_KANAGAWA_PERMISSIVE
-else
-    config --disable CONFIG_KANAGAWA_PERMISSIVE
-fi
 
-if grep -q "CONFIG_KANAGAWA_PERMISSIVE=y" "$DEFCONFIG_FILE"; then
-    VARIANT="${VARIANT}-PERMISSIVE"
-fi
+# Setup initial branding
+INTERNAL_BRAND_BASE="-${KERNEL_NAME}-${BRANCH_TAG}-${VARIANT}"
 
-# This sets the string appended to the base kernel version for `uname -r`
-# Format Example: -SuiKernel-Experimental-KernelSU-Next
-INTERNAL_BRAND="-${KERNEL_NAME}-${BRANCH_TAG}-${VARIANT}"
-
-# This defines the full user-facing name for zips and AnyKernel
-# Format Example: 5.10.252-SuiKernel-Experimental-KernelSU-Next
-export KERNEL_RELEASE_NAME="${LINUX_VERSION}${INTERNAL_BRAND}"
-
-# Apply branding-specific modifications from your snippet
 if [ -f "./common/build.config.gki" ]; then
     log "Patching build.config.gki for branding..."
     sed -i 's/check_defconfig//' ./common/build.config.gki
 fi
 
-# Set the kernel's local version for uname -r and disable auto-generation
-config --set-str CONFIG_LOCALVERSION "$INTERNAL_BRAND"
 config --disable CONFIG_LOCALVERSION_AUTO
-log "Internal kernel version set to: ${KERNEL_RELEASE_NAME}"
-
 
 # Declare needed variables
 export KBUILD_BUILD_USER="$USER"
@@ -185,10 +166,7 @@ KERNEL_IMAGE="$KSRC/out/arch/arm64/boot/Image"
 KMI_CHECK="$workdir/scripts/KMI_function_symbols_test.py"
 MODULE_SYMVERS="$KSRC/out/Module.symvers"
 
-# --- ADD THIS LINE ---
-# Stop the kernel from appending the '+' for uncommitted changes
 touch .scmversion
-# ---------------------
 
 # Extract SUSFS version
 if [[ "$VARIANT" != "Vanilla" ]] && grep -q "SUSFS_VERSION" $KSRC/include/linux/susfs.h 2>/dev/null; then
@@ -197,11 +175,10 @@ else
     SUSFS_VERSION="None"
 fi
 
-# Extract Clang Version
 CLANG_VERSION=$(clang -v 2>&1 | head -n 1 | grep -oP 'clang version \K[0-9.]+')
 
 text=$(
-  cat << EOF
+  cat << MSGEOF
 *==== SuiKernel Builder ====*
 *Linux Version*: $LINUX_VERSION
 *Branch*: $BRANCH_TAG
@@ -209,7 +186,7 @@ text=$(
 *Root Method*: $ROOT_METHOD | ${KSU_VERSION:-None}
 *Clang*: $CLANG_VERSION
 *Kakangku*: 100
-EOF
+MSGEOF
 )
 
 if [[ "$VARIANT" != "Vanilla" ]]; then
@@ -218,60 +195,101 @@ if [[ "$VARIANT" != "Vanilla" ]]; then
 fi
 
 MESSAGE_ID=$(send_msg "$text" 2>&1 | jq -r .result.message_id)
-
-# --- SAVE MSG ID FOR GITHUB WORKFLOW ---
 echo "MESSAGE_ID=$MESSAGE_ID" >> $GITHUB_ENV
-# ---------------------------------------
 
-## SuiKernel Single
-log "Generating config..."
-make $BUILD_FLAGS $KERNEL_DEFCONFIG
-
-# Build the actual kernel
-log "Building kernel..."
-make $BUILD_FLAGS Image modules
-
-# Check KMI Function symbol
-$KMI_CHECK "$KSRC/android/abi_gki_aarch64.xml" "$MODULE_SYMVERS"
-
-## Post-compiling stuff
-cd $workdir
-
-# Clone AnyKernel
-log "Cloning anykernel from $(simplify_gh_url "$ANYKERNEL_REPO")"
-git clone -q --depth=1 $ANYKERNEL_REPO -b $ANYKERNEL_BRANCH anykernel
-
-# Set kernel string in anykernel
-if [[ $STATUS == "BETA" ]]; then
-  BUILD_DATE=$(date -d "$KBUILD_BUILD_TIMESTAMP" +"%Y%m%d-%H%M")
-  # Appends the date to the BETA zip
-  ZIP_NAME="${KERNEL_RELEASE_NAME}-${BUILD_DATE}.zip"
-  sed -i \
-    "s/kernel.string=.*/kernel.string=${KERNEL_RELEASE_NAME} (${BUILD_DATE})/g" \
-    $workdir/anykernel/anykernel.sh
+# Determine modes to build
+if [[ "$PERMISSIVE_MODE" == "Both" ]]; then
+    MODES=("Normal" "Permissive")
+elif [[ "$PERMISSIVE_MODE" == "Permissive" ]]; then
+    MODES=("Permissive")
 else
-  # Clean name for Stable/Release zips
-  ZIP_NAME="${KERNEL_RELEASE_NAME}.zip"
-  sed -i \
-    "s/kernel.string=.*/kernel.string=${KERNEL_RELEASE_NAME}/g" \
-    $workdir/anykernel/anykernel.sh
+    MODES=("Normal")
 fi
 
-# Zip the anykernel
-cd anykernel
-log "Zipping anykernel..."
-cp $KERNEL_IMAGE .
-zip -r9 "$workdir/$ZIP_NAME" ./*
-cd -
+# Clone AnyKernel once
+cd $workdir
+log "Cloning anykernel from $(simplify_gh_url "$ANYKERNEL_REPO")"
+git clone -q --depth=1 $ANYKERNEL_REPO -b $ANYKERNEL_BRANCH anykernel_base
+cd "$KSRC"
 
+mkdir -p $workdir/artifacts
+
+# Loop and build each mode
+for MODE in "${MODES[@]}"; do
+    log "================================================="
+    log "   BUILDING MODE: $MODE"
+    log "================================================="
+
+    if [[ "$MODE" == "Permissive" ]]; then
+        config --enable CONFIG_KANAGAWA_PERMISSIVE
+        CURRENT_VARIANT="${VARIANT}-PERMISSIVE"
+    else
+        config --disable CONFIG_KANAGAWA_PERMISSIVE
+        CURRENT_VARIANT="${VARIANT}"
+    fi
+
+    CURRENT_INTERNAL_BRAND="-${KERNEL_NAME}-${BRANCH_TAG}-${CURRENT_VARIANT}"
+    CURRENT_KERNEL_RELEASE_NAME="${LINUX_VERSION}${CURRENT_INTERNAL_BRAND}"
+    config --set-str CONFIG_LOCALVERSION "$CURRENT_INTERNAL_BRAND"
+    
+    log "Internal kernel version set to: ${CURRENT_KERNEL_RELEASE_NAME}"
+
+    log "Generating config..."
+    make $BUILD_FLAGS $KERNEL_DEFCONFIG
+
+    log "Building kernel..."
+    make $BUILD_FLAGS Image modules
+
+    $KMI_CHECK "$KSRC/android/abi_gki_aarch64.xml" "$MODULE_SYMVERS"
+
+    cd $workdir
+    rm -rf anykernel
+    cp -r anykernel_base anykernel
+    
+    if [[ $STATUS == "BETA" ]]; then
+      BUILD_DATE=$(date -d "$KBUILD_BUILD_TIMESTAMP" +"%Y%m%d-%H%M")
+      ZIP_NAME="${CURRENT_KERNEL_RELEASE_NAME}-${BUILD_DATE}.zip"
+      sed -i "s/kernel.string=.*/kernel.string=${CURRENT_KERNEL_RELEASE_NAME} (${BUILD_DATE})/g" anykernel/anykernel.sh
+    else
+      ZIP_NAME="${CURRENT_KERNEL_RELEASE_NAME}.zip"
+      sed -i "s/kernel.string=.*/kernel.string=${CURRENT_KERNEL_RELEASE_NAME}/g" anykernel/anykernel.sh
+    fi
+
+    cd anykernel
+    log "Zipping anykernel ($MODE)..."
+    cp $KERNEL_IMAGE .
+    zip -r9 "$workdir/$ZIP_NAME" ./* >/dev/null
+    cd $workdir
+
+    BUILD_END=$(date +%s)
+    BUILD_DIFF=$((BUILD_END - BUILD_START))
+    BUILD_MINS=$((BUILD_DIFF / 60))
+    BUILD_SECS=$((BUILD_DIFF % 60))
+    BUILD_TIME_STR="${BUILD_MINS}m ${BUILD_SECS}s"
+
+    CAPTION=$(cat << CAPEOF
+Build Time: $BUILD_TIME_STR
+Build By: $RUNNER_NAME
+Variant: $CURRENT_VARIANT
+Kakangku: 100
+${MANAGER_VERSIONS}
+CAPEOF
+    )
+
+    if [[ $STATUS == "BETA" ]]; then
+      reply_file "$MESSAGE_ID" "$workdir/$ZIP_NAME" "$CAPTION"
+    else
+      mv "$workdir/$ZIP_NAME" "$workdir/artifacts/"
+      reply_file "$MESSAGE_ID" "$workdir/artifacts/$ZIP_NAME" "$CAPTION"
+    fi
+    
+    cd "$KSRC"
+done
+
+# Save metadata for Github Actions release job
 if [[ $STATUS != "BETA" ]]; then
   echo "BASE_NAME=$KERNEL_NAME-$VARIANT" >> $GITHUB_ENV
-  mkdir -p $workdir/artifacts
-  # Only move zips
-  mv "$workdir/"*.zip "$workdir/artifacts/"
-fi
-
-if [[ $STATUS != "BETA" ]]; then
+  echo "BUILD_TIME=$BUILD_TIME_STR" >> $GITHUB_ENV
   (
     echo "LINUX_VERSION=$LINUX_VERSION"
     echo "KSU_VERSION=${KSU_VERSION:-Vanilla}"
@@ -285,29 +303,6 @@ if [[ $STATUS != "BETA" ]]; then
   ) >> $workdir/artifacts/info.txt
 fi
 
-BUILD_END=$(date +%s)
-BUILD_DIFF=$((BUILD_END - BUILD_START))
-BUILD_MINS=$((BUILD_DIFF / 60))
-BUILD_SECS=$((BUILD_DIFF % 60))
-BUILD_TIME_STR="${BUILD_MINS}m ${BUILD_SECS}s"
-echo "BUILD_TIME=$BUILD_TIME_STR" >> $GITHUB_ENV
-
-CAPTION=$(cat << EOF
-Build Time: $BUILD_TIME_STR
-Build By: $RUNNER_NAME
-Variant: $VARIANT
-Kakangku: 100
-${MANAGER_VERSIONS}
-EOF
-)
-
-if [[ $STATUS == "BETA" ]]; then
-  reply_file "$MESSAGE_ID" "$workdir/$ZIP_NAME" "$CAPTION"
-else
-  log "Build Succeeded. Sending artifact directly to Telegram."
-  reply_file "$MESSAGE_ID" "$workdir/artifacts/$ZIP_NAME" "$CAPTION"
-fi
-
 # --- FETCH KERNELSU-NEXT MANAGER APKS ---
 if [[ "$VARIANT" == *"KernelSU-Next"* ]]; then
   log "Fetching latest KernelSU-Next Manager APKs from releases..."
@@ -318,23 +313,16 @@ if [[ "$VARIANT" == *"KernelSU-Next"* ]]; then
     curl -sL "$M_URL" -o "$workdir/KernelSU-Next-Normal.apk"
     curl -sL "$S_URL" -o "$workdir/KernelSU-Next-Spoofed.apk"
     
-    if [[ $STATUS != "BETA" ]]; then
+    if [[ $STATUS == "BETA" ]]; then
+      reply_file "$MESSAGE_ID" "$workdir/KernelSU-Next-Normal.apk" "KernelSU-Next Manager (Normal)"
+      reply_file "$MESSAGE_ID" "$workdir/KernelSU-Next-Spoofed.apk" "KernelSU-Next Manager (Spoofed)"
+    else
       mv "$workdir/KernelSU-Next-Normal.apk" "$workdir/artifacts/"
       mv "$workdir/KernelSU-Next-Spoofed.apk" "$workdir/artifacts/"
       reply_file "$MESSAGE_ID" "$workdir/artifacts/KernelSU-Next-Normal.apk" "KernelSU-Next Manager (Normal)"
       reply_file "$MESSAGE_ID" "$workdir/artifacts/KernelSU-Next-Spoofed.apk" "KernelSU-Next Manager (Spoofed)"
-    else
-      reply_file "$MESSAGE_ID" "$workdir/KernelSU-Next-Normal.apk" "KernelSU-Next Manager (Normal)"
-      reply_file "$MESSAGE_ID" "$workdir/KernelSU-Next-Spoofed.apk" "KernelSU-Next Manager (Spoofed)"
     fi
   else
-    log "Warning: Failed to fetch KernelSU-Next artifacts!"
+    log "Failed to fetch Manager APKs from official releases API"
   fi
 fi
-# ----------------------------------------
-
-# Always send the build log on success, regardless of status
-cp "$workdir/build.log" "$workdir/BuildLog-${VARIANT}.log"
-reply_file "$MESSAGE_ID" "$workdir/BuildLog-${VARIANT}.log"
-
-exit 0
