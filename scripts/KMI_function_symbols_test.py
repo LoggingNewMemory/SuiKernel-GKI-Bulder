@@ -68,7 +68,7 @@ def compare_symbols(xml_file: Path, symvers_file: Path) -> int:
         missing_symbols = abi_symbols - symvers_symbols
 
         if not missing_symbols:
-            print("\nAll symbols found in Module.symvers. ✅\n")
+            print("\nAll symbols found in Module.symvers.\n")
             return 0
 
         print("\nMissing symbols from Module.symvers:")

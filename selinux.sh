@@ -123,4 +123,4 @@ inject_selinux "Moona Hoshinova ZRAM" \
     ksu_allow(db, "kernel", "proc_page_cluster", "file", "getattr");\n\
     ksu_allow(db, "kernel", "sysfs", "file", "write");\n'
 
-log "✅ All SELinux rules injected successfully"
+log "All SELinux rules injected successfully"
