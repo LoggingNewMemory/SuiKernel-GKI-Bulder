@@ -70,9 +70,9 @@ jobs:
             echo 'matrix=["KernelSU-Next", "Vanilla"]' >> $GITHUB_OUTPUT
           fi
           if [[ "${{ inputs.BUILD_PERMISSIVE }}" == "true" ]]; then
-            echo 'permissive_mode="Both"' >> $GITHUB_OUTPUT
+            echo 'permissive_mode=Both' >> $GITHUB_OUTPUT
           else
-            echo 'permissive_mode="Normal"' >> $GITHUB_OUTPUT
+            echo 'permissive_mode=Normal' >> $GITHUB_OUTPUT
           fi
 
   build:
