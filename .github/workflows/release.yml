@@ -135,7 +135,7 @@ jobs:
             -> Compiler: clang ${{ env.CLANG_VERSION }}
             -> Kakangku: 100
 
-            KernelSU Next Manager APKs (from dev branch CI) are attached below!
+            KernelSU Next Manager APKs are attached below!
 
             ### Changelogs
             *(Edit this release to add changelogs)*
