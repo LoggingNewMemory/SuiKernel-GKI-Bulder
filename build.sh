@@ -117,7 +117,7 @@ else
   
   # --- INJECT SuiKernel Manager KSUN Patch ---
   log "Patching SuiKernel Manager..."
-  bash "$workdir/SuiKernelManager.sh" "$kernel_dir"
+  bash "$workdir/SuiKernelManager.sh" "$KSRC"
 
   # --- INJECT SELinux Rules ---
   # Rules are maintained in selinux.sh — edit that file to add new modules
