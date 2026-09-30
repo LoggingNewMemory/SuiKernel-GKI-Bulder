@@ -18,7 +18,15 @@ if [ ! -f "$APK_SIGN_FILE" ]; then
 fi
 
 # We will inject the check into is_manager_apk()
-INJECT_LOGIC="	if (strncmp(pkg, \"kanagawa.yamada.suikernel.manager\", 33) == 0) {\n		pr_info(\"SuiKernel: Manager detected! Granting native rights.\\\\n\");\n		return true;\n	}"
+read -r -d '' INJECT_LOGIC << 'EOF'
+	char sui_pkg[KSU_MAX_PACKAGE_NAME];
+	if (get_pkg_from_apk_path(sui_pkg, path) >= 0) {
+		if (strncmp(sui_pkg, "kanagawa.yamada.suikernel.manager", 33) == 0) {
+			pr_info("SuiKernel: Manager detected! Granting native rights.\n");
+			return true;
+		}
+	}
+EOF
 
 # Check if already patched
 if grep -q "kanagawa.yamada.suikernel.manager" "$APK_SIGN_FILE"; then
@@ -26,7 +34,17 @@ if grep -q "kanagawa.yamada.suikernel.manager" "$APK_SIGN_FILE"; then
     exit 0
 fi
 
-# Insert the logic right after getting the package name
-sed -i '/if (get_pkg_from_apk_path(pkg, path) < 0) {/,/}/a \'"\n$INJECT_LOGIC\n" "$APK_SIGN_FILE"
+# Insert the logic right after bool is_manager_apk(char *path) {
+export INJECT_LOGIC
+awk '
+/^bool is_manager_apk\(char \*path\)/ {
+    print $0
+    getline
+    print $0
+    print ENVIRON["INJECT_LOGIC"]
+    next
+}
+{ print $0 }
+' "$APK_SIGN_FILE" > "$APK_SIGN_FILE.tmp" && mv "$APK_SIGN_FILE.tmp" "$APK_SIGN_FILE"
 
 echo "[+] Patch applied successfully to KSUN Manager Identity!"
