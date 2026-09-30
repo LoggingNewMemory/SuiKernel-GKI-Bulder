@@ -114,6 +114,10 @@ else
   log "Setting KernelSU Next variant..."
   VARIANT="KernelSU-Next"
   install_ksu pershoot/KernelSU-Next "dev-susfs"
+  
+  # --- INJECT SuiKernel Manager KSUN Patch ---
+  log "Patching SuiKernel Manager..."
+  bash "$workdir/SuiKernelManager.sh" "$kernel_dir"
 
   # --- INJECT SELinux Rules ---
   # Rules are maintained in selinux.sh — edit that file to add new modules
