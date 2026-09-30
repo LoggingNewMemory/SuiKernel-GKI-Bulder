@@ -65,7 +65,7 @@ patch(
 			pr_info("SuiKernel: Manager detected! Granting native rights.\\n");
 			return true;
 		}
-	}""".replace("SUI_PKG", SUI_PKG).replace("SUI_PKG_LEN", SUI_PKG_LEN),
+	}""".replace("SUI_PKG_LEN", SUI_PKG_LEN).replace("SUI_PKG", SUI_PKG),
     label = "is_manager_apk() bypass injected",
 )
 
@@ -223,7 +223,7 @@ patch(
 						kfree(pos);
 					}
 				}
-			} else {""".replace("SUI_PKG", SUI_PKG).replace("SUI_PKG_LEN", SUI_PKG_LEN),
+			} else {""".replace("SUI_PKG_LEN", SUI_PKG_LEN).replace("SUI_PKG", SUI_PKG),
     label = "my_actor() dual-crown routing added",
 )
 
