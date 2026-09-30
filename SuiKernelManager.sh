@@ -212,16 +212,11 @@ patch(
 				char _pkg[KSU_MAX_PACKAGE_NAME];
 				if (get_pkg_from_apk_path(_pkg, dirpath) == 0 &&
 				    strncmp(_pkg, "SUI_PKG", SUI_PKG_LEN) == 0) {
-					// SuiKernel Manager: crown it but keep scanning for the official manager
+					// SuiKernel Manager: crown it, keep scanning for the official manager
 					crown_sui_manager(dirpath, my_ctx->private_data);
 				} else {
-					// Official KernelSU-Next Manager: crown it and stop scanning
+					// Official KernelSU-Next Manager: crown it, keep scanning for SuiKernel Manager
 					crown_manager(dirpath, my_ctx->private_data);
-					*my_ctx->stop = 1;
-					list_for_each_entry_safe (pos, n, &apk_path_hash_list, list) {
-						list_del(&pos->list);
-						kfree(pos);
-					}
 				}
 			} else {""".replace("SUI_PKG_LEN", SUI_PKG_LEN).replace("SUI_PKG", SUI_PKG),
     label = "my_actor() dual-crown routing added",
@@ -267,7 +262,7 @@ patch(
 		pr_info("SuiKernel Manager is uninstalled, invalidating.\\n");
 		ksu_invalidate_sui_manager_uid();
 	}
-	if (!manager_exist && !ksu_is_manager_appid_valid()) {
+	if (!ksu_is_manager_appid_valid() || !ksu_is_sui_manager_appid_valid()) {
 		pr_info("Searching for managers...\\n");
 		search_manager("/data/app", 2, &uid_list);
 		pr_info("Search managers finished\\n");
