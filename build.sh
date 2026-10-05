@@ -330,3 +330,14 @@ if [[ "$VARIANT" == *"KernelSU-Next"* ]]; then
     log "Failed to fetch Manager APKs from official releases API"
   fi
 fi
+
+# --- SEND BUILD LOG ON SUCCESS ---
+log "Build script finished. Sending build log..."
+LOG_NAME="BuildLog-${VARIANT:-Unknown}.log"
+cp "$workdir/build.log" "$workdir/$LOG_NAME"
+if [[ -n $MESSAGE_ID ]]; then
+  reply_file "$MESSAGE_ID" "$workdir/$LOG_NAME" "Build Log (Success)"
+else
+  upload_file "$workdir/$LOG_NAME"
+fi
+
