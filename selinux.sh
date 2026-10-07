@@ -18,8 +18,9 @@ inject_selinux() {
     local rules="$2"
 
     log "Injecting ${label} SELinux rules..."
-    sed -i "/rcu_assign_pointer(selinux_state.policy, pol);/i ${rules}" \
-        "$SELINUX_RULES_C"
+    sed -i -e "0,/rcu_assign_pointer(selinux_state.policy, pol);/ {
+        /rcu_assign_pointer(selinux_state.policy, pol);/i ${rules}
+    }" "$SELINUX_RULES_C"
 }
 
 # ---------------------------------------------------------------------------
