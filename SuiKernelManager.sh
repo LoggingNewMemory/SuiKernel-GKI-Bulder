@@ -195,74 +195,162 @@ static void crown_manager(const char *apk, struct list_head *uid_data)
     label = "crown_sui_manager() function added",
 )
 
-# 3c. In my_actor(): split handling — SuiKernel keeps scanning, official stops
+# 3c. In search_manager(): split handling — SuiKernel keeps scanning, official stops
 patch(
     THRONE_TRACKER,
-    target = """			if (is_manager) {
-				crown_manager(dirpath, my_ctx->private_data);
-				*my_ctx->stop = 1;
+    target = """			bool is_manager = is_manager_apk(candidate_path);
+			pr_info("Found manager base.apk at path: %s, is_manager: %d\\n", candidate_path, is_manager);
 
-				// Manager found, clear APK cache list
-				list_for_each_entry_safe (pos, n, &apk_path_hash_list, list) {
-					list_del(&pos->list);
-					kfree(pos);
-				}
-			} else {""",
-    replacement = """			if (is_manager) {
-				char _pkg[KSU_MAX_PACKAGE_NAME];
-				if (get_pkg_from_apk_path(_pkg, dirpath) == 0 &&
-				    strncmp(_pkg, "SUI_PKG", SUI_PKG_LEN) == 0) {
-					// SuiKernel Manager: crown it, keep scanning for the official manager
-					crown_sui_manager(dirpath, my_ctx->private_data);
-				} else {
-					// Official KernelSU-Next Manager: crown it, keep scanning for SuiKernel Manager
-					crown_manager(dirpath, my_ctx->private_data);
-				}
-			} else {""".replace("SUI_PKG_LEN", SUI_PKG_LEN).replace("SUI_PKG", SUI_PKG),
-    label = "my_actor() dual-crown routing added",
+			// Only crown if verification passes
+			if (unlikely(!is_manager))
+				goto skip_iterate;
+
+			// Verified manager found, halt outer loop
+			stop = 1;
+			crown_manager(candidate_path, uid_data);""",
+    replacement = """			bool is_manager = is_manager_apk(candidate_path);
+			pr_info("Found manager base.apk at path: %s, is_manager: %d\\n", candidate_path, is_manager);
+
+			// Only crown if verification passes
+			if (unlikely(!is_manager))
+				goto skip_iterate;
+
+			char _pkg[KSU_MAX_PACKAGE_NAME];
+			if (get_pkg_from_apk_path(_pkg, candidate_path) == 0 &&
+			    strncmp(_pkg, "SUI_PKG", SUI_PKG_LEN) == 0) {
+				crown_sui_manager(candidate_path, uid_data);
+			} else {
+				crown_manager(candidate_path, uid_data);
+			}
+			// We remove stop = 1 to keep searching in case both managers exist""".replace("SUI_PKG_LEN", SUI_PKG_LEN).replace("SUI_PKG", SUI_PKG),
+    label = "search_manager() dual-crown routing added",
 )
 
 # 3d. In track_throne(): validate and invalidate both manager UIDs independently
 patch(
     THRONE_TRACKER,
     target = """	// first, check if manager_uid exist!
-	bool manager_exist = false;
+	uid_t manager_package_uid = KSU_INVALID_APPID;
+	bool need_rescan = false;
 	list_for_each_entry (np, &uid_list, list) {
-		if (np->uid == ksu_get_manager_appid()) {
-			manager_exist = true;
+#ifdef KSU_MANAGER_PACKAGE
+		if (strcmp(np->package, KSU_MANAGER_PACKAGE) == 0) {
+			manager_package_uid = np->uid;
 			break;
 		}
+#else
+		if (np->uid == ksu_get_manager_appid()) {
+			manager_package_uid = np->uid;
+			break;
+		}
+#endif
 	}
 
-	if (!manager_exist) {
+	if (manager_package_uid == KSU_INVALID_APPID) {
+		cached_manager_apk_path[0] = 0;
 		if (ksu_is_manager_appid_valid()) {
 			pr_info("manager is uninstalled, invalidate it!\\n");
 			ksu_invalidate_manager_uid();
 			goto prune;
 		}
+#ifndef KSU_MANAGER_PACKAGE
+		// Unpinned: package name unknown; rescan to find it
+		need_rescan = true;
+#endif
+	} else {
+		if (!ksu_is_manager_appid_valid()) {
+			need_rescan = true;
+		} else if (unlikely(np->uid != ksu_get_manager_appid())) {
+			// this should not happen in normal android system
+			pr_info("manager uid changed, invalidate it!\\n");
+			cached_manager_apk_path[0] = 0;
+			ksu_invalidate_manager_uid();
+			need_rescan = true;
+		} else {
+			// uid unchanged, skip
+			pr_info("manager uid unchanged, skip search!\\n");
+		}
+	}
+
+	if (need_rescan) {
+		// If the apk path still exists, the verification result won't be changed
+		if (cached_manager_apk_path[0]) {
+			struct path p;
+			int ret = kern_path(cached_manager_apk_path, 0, &p);
+			if (ret == 0) {
+				// skip search
+				pr_info("manager apk path unchanged, skip search!\\n");
+				path_put(&p);
+				goto prune;
+			} else if (ret != -ENOENT) {
+				pr_err("stat cached manager path failed: %d (path=%s)\\n", ret, cached_manager_apk_path);
+			}
+		}
+#ifdef KSU_MANAGER_PACKAGE
+		pr_info("Searching manager " KSU_MANAGER_PACKAGE "...\\n");
+#else
 		pr_info("Searching manager...\\n");
+#endif
 		search_manager("/data/app", 2, &uid_list);
 		pr_info("Search manager finished\\n");
 	}""",
     replacement = """	// first, check if manager_uid exist! (both official and SuiKernel)
-	bool manager_exist = false;
-	bool sui_manager_exist = false;
+	uid_t manager_package_uid = KSU_INVALID_APPID;
+	uid_t sui_manager_package_uid = KSU_INVALID_APPID;
+	bool need_rescan = false;
 	list_for_each_entry (np, &uid_list, list) {
-		if (np->uid == ksu_get_manager_appid())
-			manager_exist = true;
-		if (np->uid == ksu_get_sui_manager_appid())
-			sui_manager_exist = true;
+#ifdef KSU_MANAGER_PACKAGE
+		if (strcmp(np->package, KSU_MANAGER_PACKAGE) == 0) {
+			manager_package_uid = np->uid;
+		}
+#else
+		if (np->uid == ksu_get_manager_appid()) {
+			manager_package_uid = np->uid;
+		}
+#endif
+		if (np->uid == ksu_get_sui_manager_appid()) {
+			sui_manager_package_uid = np->uid;
+		}
 	}
 
-	if (!manager_exist && ksu_is_manager_appid_valid()) {
-		pr_info("manager is uninstalled, invalidate it!\\n");
-		ksu_invalidate_manager_uid();
+	if (manager_package_uid == KSU_INVALID_APPID) {
+		cached_manager_apk_path[0] = 0;
+		if (ksu_is_manager_appid_valid()) {
+			pr_info("manager is uninstalled, invalidate it!\\n");
+			ksu_invalidate_manager_uid();
+		}
+#ifndef KSU_MANAGER_PACKAGE
+		// Unpinned: package name unknown; rescan to find it
+		need_rescan = true;
+#endif
+	} else {
+		if (!ksu_is_manager_appid_valid()) {
+			need_rescan = true;
+		} else if (unlikely(manager_package_uid != ksu_get_manager_appid())) {
+			pr_info("manager uid changed, invalidate it!\\n");
+			cached_manager_apk_path[0] = 0;
+			ksu_invalidate_manager_uid();
+			need_rescan = true;
+		}
 	}
-	if (!sui_manager_exist && ksu_is_sui_manager_appid_valid()) {
-		pr_info("SuiKernel Manager is uninstalled, invalidating.\\n");
-		ksu_invalidate_sui_manager_uid();
+
+	if (sui_manager_package_uid == KSU_INVALID_APPID) {
+		if (ksu_is_sui_manager_appid_valid()) {
+			pr_info("SuiKernel Manager is uninstalled, invalidate it!\\n");
+			ksu_invalidate_sui_manager_uid();
+		}
+		need_rescan = true;
+	} else {
+		if (!ksu_is_sui_manager_appid_valid()) {
+			need_rescan = true;
+		} else if (unlikely(sui_manager_package_uid != ksu_get_sui_manager_appid())) {
+			pr_info("SuiKernel Manager uid changed, invalidate it!\\n");
+			ksu_invalidate_sui_manager_uid();
+			need_rescan = true;
+		}
 	}
-	if (!ksu_is_manager_appid_valid() || !ksu_is_sui_manager_appid_valid()) {
+
+	if (need_rescan) {
 		pr_info("Searching for managers...\\n");
 		search_manager("/data/app", 2, &uid_list);
 		pr_info("Search managers finished\\n");
