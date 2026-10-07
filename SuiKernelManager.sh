@@ -60,7 +60,14 @@ patch(
 {
 	// SuiKernel Manager: bypass signature check by package name
 	char sui_pkg[KSU_MAX_PACKAGE_NAME];
-	if (get_pkg_from_apk_path(sui_pkg, path) >= 0) {
+	char dir_path[512];
+	char *last_slash;
+	
+	strscpy(dir_path, path, sizeof(dir_path));
+	last_slash = strrchr(dir_path, '/');
+	if (last_slash) *last_slash = '\\0';
+
+	if (get_pkg_from_apk_dir_path(sui_pkg, dir_path) >= 0) {
 		if (strncmp(sui_pkg, "SUI_PKG", SUI_PKG_LEN) == 0) {
 			pr_info("SuiKernel: Manager detected! Granting native rights.\\n");
 			return true;
@@ -171,7 +178,14 @@ patch(
     replacement = """static void crown_sui_manager(const char *apk, struct list_head *uid_data)
 {
 	char pkg[KSU_MAX_PACKAGE_NAME];
-	if (get_pkg_from_apk_path(pkg, apk) < 0) {
+	char dir_path[512];
+	char *last_slash;
+
+	strscpy(dir_path, apk, sizeof(dir_path));
+	last_slash = strrchr(dir_path, '/');
+	if (last_slash) *last_slash = '\\0';
+
+	if (get_pkg_from_apk_dir_path(pkg, dir_path) < 0) {
 		pr_err("Failed to get package name from apk path: %s\\n", apk);
 		return;
 	}
@@ -216,7 +230,14 @@ patch(
 				goto skip_iterate;
 
 			char _pkg[KSU_MAX_PACKAGE_NAME];
-			if (get_pkg_from_apk_path(_pkg, candidate_path) == 0 &&
+			char _dir_path[512];
+			char *_last_slash;
+
+			strscpy(_dir_path, candidate_path, sizeof(_dir_path));
+			_last_slash = strrchr(_dir_path, '/');
+			if (_last_slash) *_last_slash = '\\0';
+
+			if (get_pkg_from_apk_dir_path(_pkg, _dir_path) == 0 &&
 			    strncmp(_pkg, "SUI_PKG", SUI_PKG_LEN) == 0) {
 				crown_sui_manager(candidate_path, uid_data);
 			} else {
