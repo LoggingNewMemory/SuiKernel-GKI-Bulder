@@ -124,10 +124,6 @@ else
   source "$workdir/selinux.sh"
   # ------------------------------------------
 
-  # --- INJECT Pavolia Reine KernelSU Patch ---
-  source "$workdir/PavoliaReinePatch.sh"
-  # ------------------------------------------
-
   # --- INTEGRATE SUSFS ---
   source "$workdir/SUSFSPatch.sh"
 
