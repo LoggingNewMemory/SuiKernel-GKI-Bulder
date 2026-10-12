@@ -16,7 +16,7 @@ on:
         default: 'suikernel-experimental'
       BUILD_TARGET:
         type: string
-        default: 'Both'
+        default: 'KernelSU-Next'
       BUILD_PERMISSIVE:
         type: boolean
         default: false
@@ -42,12 +42,12 @@ on:
           - "suikernel-experimental"
       BUILD_TARGET:
         description: Target to Build
-        default: "Both"
+        default: "KernelSU-Next"
         type: choice
         options:
-          - "Both"
           - "KernelSU-Next"
           - "Vanilla"
+          - "Both"
       BUILD_PERMISSIVE:
         description: "Build Permissive Variant as well?"
         type: boolean
