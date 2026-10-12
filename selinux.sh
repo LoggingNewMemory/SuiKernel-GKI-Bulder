@@ -141,6 +141,13 @@ inject_selinux "SuiKernel Manager Storage" \
     ksu_allow(db, "kernel", "system_data_file", "dir", "getattr");\n\
     ksu_allow(db, "kernel", "system_data_file", "file", "read");\n\
     ksu_allow(db, "kernel", "system_data_file", "file", "open");\n\
-    ksu_allow(db, "kernel", "system_data_file", "file", "getattr");\n'
+    ksu_allow(db, "kernel", "system_data_file", "file", "getattr");\n\
+    ksu_allow(db, "kernel", "app_data_file", "dir", "search");\n\
+    ksu_allow(db, "kernel", "app_data_file", "dir", "read");\n\
+    ksu_allow(db, "kernel", "app_data_file", "dir", "open");\n\
+    ksu_allow(db, "kernel", "app_data_file", "dir", "getattr");\n\
+    ksu_allow(db, "kernel", "app_data_file", "file", "read");\n\
+    ksu_allow(db, "kernel", "app_data_file", "file", "open");\n\
+    ksu_allow(db, "kernel", "app_data_file", "file", "getattr");\n'
 
 log "All SELinux rules injected successfully"
