@@ -124,4 +124,23 @@ inject_selinux "Moona Hoshinova ZRAM" \
     ksu_allow(db, "kernel", "proc_page_cluster", "file", "getattr");\n\
     ksu_allow(db, "kernel", "sysfs", "file", "write");\n'
 
+# ---------------------------------------------------------------------------
+# SuiKernel Manager Config Storage — allow kernel to read /data/SuiKernel/*
+# ---------------------------------------------------------------------------
+inject_selinux "SuiKernel Manager Storage" \
+    '    ksu_allow(db, "kernel", "system_data_root_file", "dir", "search");\n\
+    ksu_allow(db, "kernel", "system_data_root_file", "dir", "read");\n\
+    ksu_allow(db, "kernel", "system_data_root_file", "dir", "open");\n\
+    ksu_allow(db, "kernel", "system_data_root_file", "dir", "getattr");\n\
+    ksu_allow(db, "kernel", "system_data_root_file", "file", "read");\n\
+    ksu_allow(db, "kernel", "system_data_root_file", "file", "open");\n\
+    ksu_allow(db, "kernel", "system_data_root_file", "file", "getattr");\n\
+    ksu_allow(db, "kernel", "system_data_file", "dir", "search");\n\
+    ksu_allow(db, "kernel", "system_data_file", "dir", "read");\n\
+    ksu_allow(db, "kernel", "system_data_file", "dir", "open");\n\
+    ksu_allow(db, "kernel", "system_data_file", "dir", "getattr");\n\
+    ksu_allow(db, "kernel", "system_data_file", "file", "read");\n\
+    ksu_allow(db, "kernel", "system_data_file", "file", "open");\n\
+    ksu_allow(db, "kernel", "system_data_file", "file", "getattr");\n'
+
 log "All SELinux rules injected successfully"
