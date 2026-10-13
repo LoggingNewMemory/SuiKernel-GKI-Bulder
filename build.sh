@@ -90,22 +90,6 @@ if [[ "$ROOT_METHOD" == "Vanilla" ]]; then
   config --disable CONFIG_KSU
   config --enable CONFIG_YAMADA_KSU_CORE
   
-  # Disable SUSFS configs for Vanilla
-  config --disable CONFIG_KSU_SUSFS
-  config --disable CONFIG_KSU_SUSFS_SUS_PATH
-  config --disable CONFIG_KSU_SUSFS_SUS_MOUNT
-  config --disable CONFIG_KSU_SUSFS_AUTO_ADD_SUS_KSU_DEFAULT_MOUNT
-  config --disable CONFIG_KSU_SUSFS_AUTO_ADD_SUS_BIND_MOUNT
-  config --disable CONFIG_KSU_SUSFS_SUS_KSTAT
-  config --disable CONFIG_KSU_SUSFS_SUS_OVERLAYFS
-  config --disable CONFIG_KSU_SUSFS_TRY_UMOUNT
-  config --disable CONFIG_KSU_SUSFS_SPOOF_UNAME
-  config --disable CONFIG_KSU_SUSFS_ENABLE_LOG
-  config --disable CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS
-  config --disable CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG
-  config --disable CONFIG_KSU_SUSFS_OPEN_REDIRECT
-  config --disable CONFIG_KSU_SUSFS_SUS_MAP
-
   # Disable property spoofing configs for Vanilla
   config --disable CONFIG_PAVOLIA_REINE_RESETPROP
   config --disable CONFIG_AYUNDA_RISU_SAFEPROP
@@ -113,7 +97,7 @@ if [[ "$ROOT_METHOD" == "Vanilla" ]]; then
 else
   log "Setting KernelSU Next variant..."
   VARIANT="KernelSU-Next"
-  install_ksu pershoot/KernelSU-Next "dev-susfs"
+  install_ksu KernelSU-Next/KernelSU-Next "dev"
   
   # --- INJECT SuiKernel Manager KSUN Patch ---
   log "Patching SuiKernel Manager..."
@@ -133,7 +117,6 @@ else
 
   config --enable CONFIG_KSU
   config --disable CONFIG_KSU_MANUAL_SU
-  config --enable CONFIG_KSU_SUSFS
 fi
 
 # ---
@@ -173,8 +156,12 @@ MODULE_SYMVERS="$KSRC/out/Module.symvers"
 touch .scmversion
 
 # Extract SUSFS version
-if [[ "$VARIANT" != "Vanilla" ]] && grep -q "SUSFS_VERSION" $KSRC/include/linux/susfs.h 2>/dev/null; then
-    SUSFS_VERSION=$(grep -oP '#define SUSFS_VERSION "\K[^"]+' $KSRC/include/linux/susfs.h)
+if [[ "$VARIANT" != "Vanilla" ]]; then
+    if grep -q "SUSFS_LKM_VERSION" "$KSRC/drivers/kernelsu/susfs/susfs.h" 2>/dev/null; then
+        SUSFS_VERSION=$(grep -oP '#define SUSFS_LKM_VERSION "\K[^"]+' "$KSRC/drivers/kernelsu/susfs/susfs.h")
+    else
+        SUSFS_VERSION="None"
+    fi
 else
     SUSFS_VERSION="None"
 fi
@@ -244,6 +231,22 @@ for MODE in "${MODES[@]}"; do
     log "Building kernel..."
     make $BUILD_FLAGS Image modules
 
+    # Locate built SUSFS LKM module, or compile explicitly if needed
+    SUSFS_KO=$(find "$KSRC/out" "$KSRC" -name "susfs_guard_lkm.ko" 2>/dev/null | head -n 1)
+    if [[ -z "$SUSFS_KO" && -d "$KSRC/drivers/kernelsu/susfs" ]]; then
+        log "Building SUSFS LKM module (susfs_guard_lkm.ko)..."
+        make $BUILD_FLAGS M=$KSRC/drivers/kernelsu/susfs modules || true
+        SUSFS_KO=$(find "$KSRC/out" "$KSRC" -name "susfs_guard_lkm.ko" 2>/dev/null | head -n 1)
+    fi
+
+    if [[ -n "$SUSFS_KO" && -f "$SUSFS_KO" ]]; then
+        log "Packaging SUSFS LKM: $SUSFS_KO"
+        llvm-strip -d "$SUSFS_KO" || true
+        mkdir -p "$workdir/artifacts"
+        cp "$SUSFS_KO" "$workdir/artifacts/${CURRENT_KERNEL_RELEASE_NAME}_susfs_guard_lkm.ko"
+        cp "$SUSFS_KO" "$workdir/artifacts/susfs_guard_lkm.ko"
+    fi
+
     $KMI_CHECK "$KSRC/android/abi_gki_aarch64.xml" "$MODULE_SYMVERS"
 
     cd $workdir
@@ -262,6 +265,9 @@ for MODE in "${MODES[@]}"; do
     cd anykernel
     log "Zipping anykernel ($MODE)..."
     cp $KERNEL_IMAGE .
+    if [[ -f "$workdir/artifacts/susfs_guard_lkm.ko" ]]; then
+      cp "$workdir/artifacts/susfs_guard_lkm.ko" .
+    fi
     zip -r9 "$workdir/$ZIP_NAME" ./* >/dev/null
     cd $workdir
 
@@ -282,9 +288,15 @@ CAPEOF
 
     if [[ $STATUS == "BETA" ]]; then
       reply_file "$MESSAGE_ID" "$workdir/$ZIP_NAME" "$CAPTION"
+      if [[ -f "$workdir/artifacts/${CURRENT_KERNEL_RELEASE_NAME}_susfs_guard_lkm.ko" ]]; then
+        reply_file "$MESSAGE_ID" "$workdir/artifacts/${CURRENT_KERNEL_RELEASE_NAME}_susfs_guard_lkm.ko" "SUSFS Guard LKM (${CURRENT_VARIANT})"
+      fi
     else
       mv "$workdir/$ZIP_NAME" "$workdir/artifacts/"
       reply_file "$MESSAGE_ID" "$workdir/artifacts/$ZIP_NAME" "$CAPTION"
+      if [[ -f "$workdir/artifacts/${CURRENT_KERNEL_RELEASE_NAME}_susfs_guard_lkm.ko" ]]; then
+        reply_file "$MESSAGE_ID" "$workdir/artifacts/${CURRENT_KERNEL_RELEASE_NAME}_susfs_guard_lkm.ko" "SUSFS Guard LKM (${CURRENT_VARIANT})"
+      fi
     fi
     
     cd "$KSRC"
