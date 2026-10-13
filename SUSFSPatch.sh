@@ -4,6 +4,9 @@
 
 log "Integrating SUSFS LKM..."
 
+# Allow unresolved symbols in modpost for SUSFS LKM (resolved dynamically by ksud at runtime)
+export KBUILD_MODPOST_WARN=1
+
 cd "$KSRC"
 
 if [ -d "drivers/kernelsu/susfs" ]; then

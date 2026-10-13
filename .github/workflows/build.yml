@@ -147,6 +147,7 @@ jobs:
           RUNNER_NAME: ${{ runner.name }}
         run: |
           export GIT_CLONE_PROTECTION_ACTIVE=false
+          export KBUILD_MODPOST_WARN=1
           chmod +x *.sh
           ./build.sh
 
