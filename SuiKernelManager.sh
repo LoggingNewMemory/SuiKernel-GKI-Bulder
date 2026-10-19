@@ -222,8 +222,8 @@ static void crown_manager(const char *apk, struct list_head *uid_data)
 # 3c. In search_manager(): split handling — SuiKernel keeps scanning, official stops
 patch(
     THRONE_TRACKER,
-    target = """			bool is_manager = is_manager_apk(candidate_path);
-			pr_info("Found manager base.apk at path: %s, is_manager: %d\\n", candidate_path, is_manager);
+    target = r"""			bool is_manager = is_manager_apk(candidate_path);
+			pr_info("Found manager base.apk at path: %s, is_manager: %d\n", candidate_path, is_manager);
 
 			// Only crown if verification passes
 			if (unlikely(!is_manager))
@@ -260,7 +260,7 @@ patch(
 # 3d. In track_throne(): validate and invalidate both manager UIDs independently
 patch(
     THRONE_TRACKER,
-    target = """	// first, check if manager_uid exist!
+    target = r"""	// first, check if manager_uid exist!
 	uid_t manager_package_uid = KSU_INVALID_APPID;
 	bool need_rescan = false;
 	list_for_each_entry (np, &uid_list, list) {
@@ -280,7 +280,7 @@ patch(
 	if (manager_package_uid == KSU_INVALID_APPID) {
 		cached_manager_apk_path[0] = 0;
 		if (ksu_is_manager_appid_valid()) {
-			pr_info("manager is uninstalled, invalidate it!\\n");
+			pr_info("manager is uninstalled, invalidate it!\n");
 			ksu_invalidate_manager_uid();
 			goto prune;
 		}
@@ -293,13 +293,13 @@ patch(
 			need_rescan = true;
 		} else if (unlikely(np->uid != ksu_get_manager_appid())) {
 			// this should not happen in normal android system
-			pr_info("manager uid changed, invalidate it!\\n");
+			pr_info("manager uid changed, invalidate it!\n");
 			cached_manager_apk_path[0] = 0;
 			ksu_invalidate_manager_uid();
 			need_rescan = true;
 		} else {
 			// uid unchanged, skip
-			pr_info("manager uid unchanged, skip search!\\n");
+			pr_info("manager uid unchanged, skip search!\n");
 		}
 	}
 
@@ -310,20 +310,20 @@ patch(
 			int ret = kern_path(cached_manager_apk_path, 0, &p);
 			if (ret == 0) {
 				// skip search
-				pr_info("manager apk path unchanged, skip search!\\n");
+				pr_info("manager apk path unchanged, skip search!\n");
 				path_put(&p);
 				goto prune;
 			} else if (ret != -ENOENT) {
-				pr_err("stat cached manager path failed: %d (path=%s)\\n", ret, cached_manager_apk_path);
+				pr_err("stat cached manager path failed: %d (path=%s)\n", ret, cached_manager_apk_path);
 			}
 		}
 #ifdef KSU_MANAGER_PACKAGE
-		pr_info("Searching manager " KSU_MANAGER_PACKAGE "...\\n");
+		pr_info("Searching manager " KSU_MANAGER_PACKAGE "...\n");
 #else
-		pr_info("Searching manager...\\n");
+		pr_info("Searching manager...\n");
 #endif
 		search_manager("/data/app", 2, &uid_list);
-		pr_info("Search manager finished\\n");
+		pr_info("Search manager finished\n");
 	}""",
     replacement = """	// first, check if manager_uid exist! (both official and SuiKernel)
 	uid_t manager_package_uid = KSU_INVALID_APPID;
