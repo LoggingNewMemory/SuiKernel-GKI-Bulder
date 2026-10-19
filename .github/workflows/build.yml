@@ -133,6 +133,13 @@ jobs:
             pip install lxml
           fi
 
+      - name: Setup Java
+        if: inputs.RUNNER_TYPE == 'ubuntu-latest'
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
       - name: Run Build Script
         env:
           TG_CHAT_ID: ${{ secrets.TG_CHAT_ID }}
