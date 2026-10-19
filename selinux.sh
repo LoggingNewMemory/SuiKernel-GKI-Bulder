@@ -18,9 +18,15 @@ inject_selinux() {
     local rules="$2"
 
     log "Injecting ${label} SELinux rules..."
-    sed -i -e "0,/rcu_assign_pointer(selinux_state.policy, pol);/ {
-        /rcu_assign_pointer(selinux_state.policy, pol);/i ${rules}
-    }" "$SELINUX_RULES_C"
+    if grep -q 'ksu_policydb_fixup_len(db, "apply_kernelsu_rules");' "$SELINUX_RULES_C"; then
+        sed -i -e "0,/ksu_policydb_fixup_len(db, \"apply_kernelsu_rules\");/ {
+            /ksu_policydb_fixup_len(db, \"apply_kernelsu_rules\");/i ${rules}
+        }" "$SELINUX_RULES_C"
+    else
+        sed -i -e "0,/rcu_assign_pointer(selinux_state.policy, pol);/ {
+            /rcu_assign_pointer(selinux_state.policy, pol);/i ${rules}
+        }" "$SELINUX_RULES_C"
+    fi
 }
 
 # ---------------------------------------------------------------------------

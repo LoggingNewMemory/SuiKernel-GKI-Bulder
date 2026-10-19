@@ -15,12 +15,20 @@ if [ -d "drivers/kernelsu/susfs" ]; then
         log "Hooking susfs/ into drivers/kernelsu/Kbuild..."
         printf "\nobj-\$(CONFIG_KSU) += susfs/\n" >> "drivers/kernelsu/Kbuild"
     fi
+    if [ -f "drivers/Makefile" ] && ! grep -q "kernelsu/susfs" "drivers/Makefile"; then
+        log "Hooking kernelsu/susfs/ into drivers/Makefile..."
+        printf "\nobj-m += kernelsu/susfs/\n" >> "drivers/Makefile"
+    fi
     log "SUSFS LKM integrated successfully!"
 elif [ -d "KernelSU-Next/kernel/susfs" ]; then
     log "Detected SUSFS LKM in KernelSU-Next/kernel/susfs"
     if [ -f "KernelSU-Next/kernel/Kbuild" ] && ! grep -q "susfs" "KernelSU-Next/kernel/Kbuild"; then
         log "Hooking susfs/ into KernelSU-Next/kernel/Kbuild..."
         printf "\nobj-\$(CONFIG_KSU) += susfs/\n" >> "KernelSU-Next/kernel/Kbuild"
+    fi
+    if [ -f "drivers/Makefile" ] && ! grep -q "kernelsu/susfs" "drivers/Makefile"; then
+        log "Hooking kernelsu/susfs/ into drivers/Makefile..."
+        printf "\nobj-m += kernelsu/susfs/\n" >> "drivers/Makefile"
     fi
     log "SUSFS LKM integrated successfully!"
 else

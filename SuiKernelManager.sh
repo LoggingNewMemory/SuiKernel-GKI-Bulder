@@ -17,9 +17,19 @@ import os
 
 ksun_dir = sys.argv[1]
 
-APK_SIGN       = os.path.join(ksun_dir, "kernel/manager/apk_sign.c")
-MANAGER_ID     = os.path.join(ksun_dir, "kernel/manager/manager_identity.h")
-THRONE_TRACKER = os.path.join(ksun_dir, "kernel/manager/throne_tracker.c")
+# Dynamically locate the manager directory
+if os.path.exists(os.path.join(ksun_dir, "kernel/manager/apk_sign.c")):
+    base_dir = os.path.join(ksun_dir, "kernel/manager")
+elif os.path.exists(os.path.join(ksun_dir, "drivers/kernelsu/manager/apk_sign.c")):
+    base_dir = os.path.join(ksun_dir, "drivers/kernelsu/manager")
+elif os.path.exists(os.path.join(ksun_dir, "manager/apk_sign.c")):
+    base_dir = os.path.join(ksun_dir, "manager")
+else:
+    base_dir = os.path.join(ksun_dir, "kernel/manager")
+
+APK_SIGN       = os.path.join(base_dir, "apk_sign.c")
+MANAGER_ID     = os.path.join(base_dir, "manager_identity.h")
+THRONE_TRACKER = os.path.join(base_dir, "throne_tracker.c")
 
 SUI_PKG     = "kanagawa.yamada.suikernel.manager"
 SUI_PKG_LEN = str(len(SUI_PKG))

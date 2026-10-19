@@ -158,8 +158,15 @@ touch .scmversion
 
 # Extract SUSFS version
 if [[ "$VARIANT" != "Vanilla" ]]; then
-    if grep -q "SUSFS_LKM_VERSION" "$KSRC/drivers/kernelsu/susfs/susfs.h" 2>/dev/null; then
-        SUSFS_VERSION=$(grep -oP '#define SUSFS_LKM_VERSION "\K[^"]+' "$KSRC/drivers/kernelsu/susfs/susfs.h")
+    SUSFS_HEADER=""
+    if [ -f "$KSRC/drivers/kernelsu/susfs/susfs.h" ]; then
+        SUSFS_HEADER="$KSRC/drivers/kernelsu/susfs/susfs.h"
+    elif [ -f "$KSRC/KernelSU-Next/kernel/susfs/susfs.h" ]; then
+        SUSFS_HEADER="$KSRC/KernelSU-Next/kernel/susfs/susfs.h"
+    fi
+
+    if [[ -n "$SUSFS_HEADER" ]] && grep -q "SUSFS_LKM_VERSION" "$SUSFS_HEADER" 2>/dev/null; then
+        SUSFS_VERSION=$(grep -oP '#define SUSFS_LKM_VERSION "\K[^"]+' "$SUSFS_HEADER")
     else
         SUSFS_VERSION="None"
     fi
@@ -232,11 +239,21 @@ for MODE in "${MODES[@]}"; do
     log "Building kernel..."
     make $BUILD_FLAGS Image modules
 
+    # Clean previous iteration artifact
+    rm -f "$workdir/artifacts/susfs_guard_lkm.ko"
+
     # Locate built SUSFS LKM module, or compile explicitly if needed
+    SUSFS_DIR=""
+    if [ -d "$KSRC/drivers/kernelsu/susfs" ]; then
+        SUSFS_DIR="$(realpath "$KSRC/drivers/kernelsu/susfs")"
+    elif [ -d "$KSRC/KernelSU-Next/kernel/susfs" ]; then
+        SUSFS_DIR="$KSRC/KernelSU-Next/kernel/susfs"
+    fi
+
     SUSFS_KO=$(find "$KSRC/out" "$KSRC" -name "susfs_guard_lkm.ko" 2>/dev/null | head -n 1)
-    if [[ -z "$SUSFS_KO" && -d "$KSRC/drivers/kernelsu/susfs" ]]; then
+    if [[ -z "$SUSFS_KO" && -n "$SUSFS_DIR" && -d "$SUSFS_DIR" ]]; then
         log "Building SUSFS LKM module (susfs_guard_lkm.ko)..."
-        make $BUILD_FLAGS M=$KSRC/drivers/kernelsu/susfs modules || true
+        (cd "$SUSFS_DIR" && make -C "$KSRC" $BUILD_FLAGS M="$PWD" modules) || true
         SUSFS_KO=$(find "$KSRC/out" "$KSRC" -name "susfs_guard_lkm.ko" 2>/dev/null | head -n 1)
     fi
 
@@ -246,6 +263,8 @@ for MODE in "${MODES[@]}"; do
         mkdir -p "$workdir/artifacts"
         cp "$SUSFS_KO" "$workdir/artifacts/${CURRENT_KERNEL_RELEASE_NAME}_susfs_guard_lkm.ko"
         cp "$SUSFS_KO" "$workdir/artifacts/susfs_guard_lkm.ko"
+    else
+        log "Warning: susfs_guard_lkm.ko not found!"
     fi
 
     $KMI_CHECK "$KSRC/android/abi_gki_aarch64.xml" "$MODULE_SYMVERS"
