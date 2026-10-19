@@ -357,69 +357,6 @@ if [[ "$VARIANT" == *"KernelSU-Next"* ]]; then
   fi
 fi
 
-# --- BUILD & SEND SUIKERNEL MANAGER APK ---
-if [[ "$VARIANT" == *"KernelSU-Next"* ]]; then
-  log "Setting up environment to build SuiKernel Manager..."
-
-  if [ -z "$ANDROID_HOME" ]; then
-    if [ -d "/home/yamada/Android/Sdk" ]; then
-      export ANDROID_HOME="/home/yamada/Android/Sdk"
-    elif [ -d "/usr/local/lib/android/sdk" ]; then
-      export ANDROID_HOME="/usr/local/lib/android/sdk"
-    elif [ -d "$HOME/Android/Sdk" ]; then
-      export ANDROID_HOME="$HOME/Android/Sdk"
-    fi
-  fi
-  if [ -n "$ANDROID_HOME" ]; then
-    export ANDROID_SDK_ROOT="$ANDROID_HOME"
-    export PATH="$ANDROID_HOME/cmdline-tools/latest/bin:$ANDROID_HOME/platform-tools:$PATH"
-  fi
-
-  log "Cloning SuiKernel Manager repository..."
-  SKM_DIR="$workdir/SuiKernel-Manager-src"
-  rm -rf "$SKM_DIR"
-  if git clone --depth=1 https://github.com/LoggingNewMemory/SuiKernel-Manager "$SKM_DIR"; then
-    if [ -d "$SKM_DIR/AppSource" ]; then
-      cd "$SKM_DIR/AppSource"
-      chmod +x gradlew
-
-      if [ -n "$ANDROID_HOME" ] && [ ! -f "local.properties" ]; then
-        echo "sdk.dir=$ANDROID_HOME" > local.properties
-      fi
-
-      log "Building SuiKernel Manager APK..."
-      ./gradlew assembleRelease || ./gradlew assembleDebug
-
-      # Look for signed APK first (avoid unsigned)
-      SKM_APK=$(find app/build/outputs/apk -name "*.apk" 2>/dev/null | grep -v "unsigned" | head -n 1)
-      if [ -z "$SKM_APK" ]; then
-        ./gradlew assembleDebug
-        SKM_APK=$(find app/build/outputs/apk -name "*.apk" 2>/dev/null | head -n 1)
-      fi
-
-      if [ -n "$SKM_APK" ] && [ -f "$SKM_APK" ]; then
-        log "Found built APK: $SKM_APK"
-        cp "$SKM_APK" "$workdir/SuiKernel-Manager.apk"
-        if [[ $STATUS == "BETA" ]]; then
-          reply_file "$MESSAGE_ID" "$workdir/SuiKernel-Manager.apk" "SuiKernel Manager"
-        else
-          mv "$workdir/SuiKernel-Manager.apk" "$workdir/artifacts/"
-          reply_file "$MESSAGE_ID" "$workdir/artifacts/SuiKernel-Manager.apk" "SuiKernel Manager"
-        fi
-        log "SuiKernel Manager APK sent to Telegram!"
-      else
-        log "Warning: Built SuiKernel Manager APK not found."
-      fi
-      cd "$workdir"
-    else
-      log "Warning: AppSource not found in SuiKernel-Manager clone."
-    fi
-    rm -rf "$SKM_DIR"
-  else
-    log "Warning: Failed to clone SuiKernel-Manager from GitHub."
-  fi
-fi
-
 # --- SEND BUILD LOG ON SUCCESS ---
 log "Build script finished. Sending build log..."
 LOG_NAME="BuildLog-${VARIANT:-Unknown}.log"
