@@ -9,18 +9,17 @@ export KBUILD_MODPOST_WARN=1
 
 cd "$KSRC"
 
-if [ -d "drivers/kernelsu/susfs" ]; then
-    log "Detected SUSFS LKM in drivers/kernelsu/susfs"
-    if [ -f "drivers/kernelsu/Kbuild" ] && ! grep -q "susfs" "drivers/kernelsu/Kbuild"; then
-        log "Hooking susfs/ into drivers/kernelsu/Kbuild..."
-        printf "\nobj-\$(CONFIG_KSU) += susfs/\n" >> "drivers/kernelsu/Kbuild"
-    fi
-    log "SUSFS LKM integrated successfully!"
-elif [ -d "KernelSU-Next/kernel/susfs" ]; then
-    log "Detected SUSFS LKM in KernelSU-Next/kernel/susfs"
-    if [ -f "KernelSU-Next/kernel/Kbuild" ] && ! grep -q "susfs" "KernelSU-Next/kernel/Kbuild"; then
-        log "Hooking susfs/ into KernelSU-Next/kernel/Kbuild..."
-        printf "\nobj-\$(CONFIG_KSU) += susfs/\n" >> "KernelSU-Next/kernel/Kbuild"
+KBUILD_FILE=""
+if [ -d "drivers/kernelsu/susfs" ] && [ -f "drivers/kernelsu/Kbuild" ]; then
+    KBUILD_FILE="drivers/kernelsu/Kbuild"
+elif [ -d "KernelSU-Next/kernel/susfs" ] && [ -f "KernelSU-Next/kernel/Kbuild" ]; then
+    KBUILD_FILE="KernelSU-Next/kernel/Kbuild"
+fi
+
+if [ -n "$KBUILD_FILE" ]; then
+    if ! grep -q "susfs" "$KBUILD_FILE"; then
+        log "Hooking susfs/ into $KBUILD_FILE..."
+        printf "\nobj-\$(CONFIG_KSU) += susfs/\n" >> "$KBUILD_FILE"
     fi
     log "SUSFS LKM integrated successfully!"
 else
