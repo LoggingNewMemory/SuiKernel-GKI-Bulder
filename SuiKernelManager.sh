@@ -7,9 +7,17 @@ if [ -z "$KERNEL_DIR" ]; then
     exit 1
 fi
 
-KSUN_DIR="$KERNEL_DIR/KernelSU-Next"
+if [ -d "$KERNEL_DIR/KernelSU-Next" ]; then
+    KSUN_DIR="$KERNEL_DIR/KernelSU-Next"
+elif [ -d "$KERNEL_DIR/drivers/YamadaKSUCore" ]; then
+    KSUN_DIR="$KERNEL_DIR/drivers/YamadaKSUCore"
+elif [ -d "$KERNEL_DIR/drivers/kernelsu" ]; then
+    KSUN_DIR="$KERNEL_DIR/drivers/kernelsu"
+else
+    KSUN_DIR="$KERNEL_DIR"
+fi
 
-echo "[+] Patching KernelSU-Next for SuiKernel Dual-Manager Support in $KSUN_DIR"
+echo "[+] Patching Manager for SuiKernel Dual-Manager Support in $KSUN_DIR"
 
 python3 - "$KSUN_DIR" << 'PYEOF'
 import sys
@@ -22,6 +30,8 @@ if os.path.exists(os.path.join(ksun_dir, "kernel/manager/apk_sign.c")):
     base_dir = os.path.join(ksun_dir, "kernel/manager")
 elif os.path.exists(os.path.join(ksun_dir, "drivers/kernelsu/manager/apk_sign.c")):
     base_dir = os.path.join(ksun_dir, "drivers/kernelsu/manager")
+elif os.path.exists(os.path.join(ksun_dir, "drivers/YamadaKSUCore/manager/apk_sign.c")):
+    base_dir = os.path.join(ksun_dir, "drivers/YamadaKSUCore/manager")
 elif os.path.exists(os.path.join(ksun_dir, "manager/apk_sign.c")):
     base_dir = os.path.join(ksun_dir, "manager")
 else:

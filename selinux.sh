@@ -131,29 +131,96 @@ inject_selinux "Moona Hoshinova ZRAM" \
     ksu_allow(db, "kernel", "sysfs", "file", "write");\n'
 
 # ---------------------------------------------------------------------------
-# SuiKernel Manager Config Storage — allow kernel to read /data/SuiKernel/*
+# SuiKernel Manager Config Storage & Execution
 # ---------------------------------------------------------------------------
 inject_selinux "SuiKernel Manager Storage" \
     '    ksu_allow(db, "kernel", "system_data_root_file", "dir", "search");\n\
     ksu_allow(db, "kernel", "system_data_root_file", "dir", "read");\n\
     ksu_allow(db, "kernel", "system_data_root_file", "dir", "open");\n\
     ksu_allow(db, "kernel", "system_data_root_file", "dir", "getattr");\n\
+    ksu_allow(db, "kernel", "system_data_root_file", "dir", "write");\n\
+    ksu_allow(db, "kernel", "system_data_root_file", "dir", "add_name");\n\
+    ksu_allow(db, "kernel", "system_data_root_file", "dir", "remove_name");\n\
     ksu_allow(db, "kernel", "system_data_root_file", "file", "read");\n\
+    ksu_allow(db, "kernel", "system_data_root_file", "file", "write");\n\
     ksu_allow(db, "kernel", "system_data_root_file", "file", "open");\n\
     ksu_allow(db, "kernel", "system_data_root_file", "file", "getattr");\n\
+    ksu_allow(db, "kernel", "system_data_root_file", "file", "create");\n\
+    ksu_allow(db, "kernel", "system_data_root_file", "file", "unlink");\n\
+    ksu_allow(db, "kernel", "system_data_root_file", "file", "setattr");\n\
     ksu_allow(db, "kernel", "system_data_file", "dir", "search");\n\
     ksu_allow(db, "kernel", "system_data_file", "dir", "read");\n\
     ksu_allow(db, "kernel", "system_data_file", "dir", "open");\n\
     ksu_allow(db, "kernel", "system_data_file", "dir", "getattr");\n\
+    ksu_allow(db, "kernel", "system_data_file", "dir", "write");\n\
+    ksu_allow(db, "kernel", "system_data_file", "dir", "add_name");\n\
+    ksu_allow(db, "kernel", "system_data_file", "dir", "remove_name");\n\
     ksu_allow(db, "kernel", "system_data_file", "file", "read");\n\
+    ksu_allow(db, "kernel", "system_data_file", "file", "write");\n\
     ksu_allow(db, "kernel", "system_data_file", "file", "open");\n\
     ksu_allow(db, "kernel", "system_data_file", "file", "getattr");\n\
+    ksu_allow(db, "kernel", "system_data_file", "file", "create");\n\
+    ksu_allow(db, "kernel", "system_data_file", "file", "unlink");\n\
+    ksu_allow(db, "kernel", "system_data_file", "file", "setattr");\n\
     ksu_allow(db, "kernel", "app_data_file", "dir", "search");\n\
     ksu_allow(db, "kernel", "app_data_file", "dir", "read");\n\
     ksu_allow(db, "kernel", "app_data_file", "dir", "open");\n\
     ksu_allow(db, "kernel", "app_data_file", "dir", "getattr");\n\
+    ksu_allow(db, "kernel", "app_data_file", "dir", "write");\n\
+    ksu_allow(db, "kernel", "app_data_file", "dir", "add_name");\n\
+    ksu_allow(db, "kernel", "app_data_file", "dir", "remove_name");\n\
     ksu_allow(db, "kernel", "app_data_file", "file", "read");\n\
+    ksu_allow(db, "kernel", "app_data_file", "file", "write");\n\
     ksu_allow(db, "kernel", "app_data_file", "file", "open");\n\
-    ksu_allow(db, "kernel", "app_data_file", "file", "getattr");\n'
+    ksu_allow(db, "kernel", "app_data_file", "file", "getattr");\n\
+    ksu_allow(db, "kernel", "app_data_file", "file", "create");\n\
+    ksu_allow(db, "kernel", "app_data_file", "file", "unlink");\n\
+    ksu_allow(db, "kernel", "app_data_file", "file", "setattr");\n\
+    ksu_allow(db, "kernel", "shell_exec", "file", "read");\n\
+    ksu_allow(db, "kernel", "shell_exec", "file", "open");\n\
+    ksu_allow(db, "kernel", "shell_exec", "file", "getattr");\n\
+    ksu_allow(db, "kernel", "shell_exec", "file", "execute");\n\
+    ksu_allow(db, "kernel", "shell_exec", "file", "execute_no_trans");\n\
+    ksu_allow(db, "kernel", "shell_exec", "file", "map");\n\
+    ksu_allow(db, "kernel", "toolbox_exec", "file", "read");\n\
+    ksu_allow(db, "kernel", "toolbox_exec", "file", "open");\n\
+    ksu_allow(db, "kernel", "toolbox_exec", "file", "getattr");\n\
+    ksu_allow(db, "kernel", "toolbox_exec", "file", "execute");\n\
+    ksu_allow(db, "kernel", "toolbox_exec", "file", "execute_no_trans");\n\
+    ksu_allow(db, "kernel", "toolbox_exec", "file", "map");\n\
+    ksu_allow(db, "kernel", "system_file", "file", "execute_no_trans");\n\
+    ksu_allow(db, "kernel", "system_file", "file", "read");\n\
+    ksu_allow(db, "kernel", "system_file", "file", "open");\n\
+    ksu_allow(db, "kernel", "system_file", "file", "getattr");\n\
+    ksu_allow(db, "kernel", "system_file", "file", "map");\n\
+    ksu_allow(db, "kernel", "untrusted_app", "fd", "use");\n\
+    ksu_allow(db, "kernel", "untrusted_app", "fifo_file", "read");\n\
+    ksu_allow(db, "kernel", "untrusted_app", "fifo_file", "write");\n\
+    ksu_allow(db, "kernel", "untrusted_app", "fifo_file", "open");\n\
+    ksu_allow(db, "kernel", "untrusted_app", "fifo_file", "getattr");\n\
+    ksu_allow(db, "kernel", "untrusted_app_all", "fd", "use");\n\
+    ksu_allow(db, "kernel", "untrusted_app_all", "fifo_file", "read");\n\
+    ksu_allow(db, "kernel", "untrusted_app_all", "fifo_file", "write");\n\
+    ksu_allow(db, "kernel", "untrusted_app_all", "fifo_file", "open");\n\
+    ksu_allow(db, "kernel", "untrusted_app_all", "fifo_file", "getattr");\n\
+    ksu_allow(db, "kernel", "untrusted_app_29", "fd", "use");\n\
+    ksu_allow(db, "kernel", "untrusted_app_29", "fifo_file", "read");\n\
+    ksu_allow(db, "kernel", "untrusted_app_29", "fifo_file", "write");\n\
+    ksu_allow(db, "kernel", "untrusted_app_30", "fd", "use");\n\
+    ksu_allow(db, "kernel", "untrusted_app_30", "fifo_file", "read");\n\
+    ksu_allow(db, "kernel", "untrusted_app_30", "fifo_file", "write");\n\
+    ksu_allow(db, "kernel", "untrusted_app_32", "fd", "use");\n\
+    ksu_allow(db, "kernel", "untrusted_app_32", "fifo_file", "read");\n\
+    ksu_allow(db, "kernel", "untrusted_app_32", "fifo_file", "write");\n\
+    ksu_allow(db, "kernel", "devpts", "chr_file", "read");\n\
+    ksu_allow(db, "kernel", "devpts", "chr_file", "write");\n\
+    ksu_allow(db, "kernel", "devpts", "chr_file", "open");\n\
+    ksu_allow(db, "kernel", "devpts", "chr_file", "ioctl");\n\
+    ksu_allow(db, "kernel", "devpts", "chr_file", "getattr");\n\
+    ksu_allow(db, "kernel", "kernel", "capability", "dac_override");\n\
+    ksu_allow(db, "kernel", "kernel", "capability", "dac_read_search");\n\
+    ksu_allow(db, "kernel", "kernel", "capability", "fowner");\n\
+    ksu_allow(db, "kernel", "kernel", "capability", "fsetid");\n\
+    ksu_allow(db, "kernel", "kernel", "capability", "sys_admin");\n'
 
 log "All SELinux rules injected successfully"
