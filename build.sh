@@ -89,13 +89,6 @@ if [[ "$ROOT_METHOD" == "Vanilla" ]]; then
   
   config --disable CONFIG_KSU
   config --enable CONFIG_YAMADA_KSU_CORE
-
-  # --- INJECT SuiKernel Manager Patch for Vanilla (YamadaKSUCore) ---
-  if [[ -d "$KSRC/drivers/YamadaKSUCore/manager" ]]; then
-    log "Patching SuiKernel Manager for YamadaKSUCore..."
-    bash "$workdir/SuiKernelManager.sh" "$KSRC"
-  fi
-  
   # Disable property spoofing configs for Vanilla
   config --disable CONFIG_PAVOLIA_REINE_RESETPROP
   config --disable CONFIG_AYUNDA_RISU_SAFEPROP
