@@ -30,7 +30,7 @@ inject_selinux() {
 }
 
 # ---------------------------------------------------------------------------
-# Tenebrion — allow kernel to read screen state + write cpuset
+# Tenebrion — allow kernel to read screen state
 # ---------------------------------------------------------------------------
 inject_selinux "Tenebrion" \
     '    ksu_allow(db, "kernel", "sysfs_leds", "dir", "search");\n\
@@ -57,23 +57,7 @@ inject_selinux "Tenebrion" \
     ksu_allow(db, "kernel", "sysfs", "dir", "getattr");\n\
     ksu_allow(db, "kernel", "sysfs", "file", "read");\n\
     ksu_allow(db, "kernel", "sysfs", "file", "open");\n\
-    ksu_allow(db, "kernel", "sysfs", "file", "getattr");\n\
-    ksu_allow(db, "kernel", "cgroup", "dir", "search");\n\
-    ksu_allow(db, "kernel", "cgroup", "dir", "write");\n\
-    ksu_allow(db, "kernel", "cgroup", "dir", "getattr");\n\
-    ksu_allow(db, "kernel", "cgroup", "file", "read");\n\
-    ksu_allow(db, "kernel", "cgroup", "file", "write");\n\
-    ksu_allow(db, "kernel", "cgroup", "file", "open");\n\
-    ksu_allow(db, "kernel", "cgroup", "file", "getattr");\n'
-
-# ---------------------------------------------------------------------------
-# Anya Thermal — allow kernel to write thermal zone mode
-# ---------------------------------------------------------------------------
-inject_selinux "Anya Thermal" \
-    '    ksu_allow(db, "kernel", "sysfs_therm", "dir", "search");\n\
-    ksu_allow(db, "kernel", "sysfs_therm", "file", "read");\n\
-    ksu_allow(db, "kernel", "sysfs_therm", "file", "write");\n\
-    ksu_allow(db, "kernel", "sysfs_therm", "file", "open");\n'
+    ksu_allow(db, "kernel", "sysfs", "file", "getattr");\n'
 
 # ---------------------------------------------------------------------------
 # NTSYNC — Allow kernel background worker to auto-chmod and spoof as gpu_device
@@ -121,14 +105,10 @@ inject_selinux "Schedutil Enforcer" \
     ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "file", "getattr");\n' 
 
 # ---------------------------------------------------------------------------
-# Moona Hoshinova ZRAM — allow kernel to write to page-cluster and vma_ra_enabled
+# Moona Hoshinova ZRAM — allow kernel to write vma_ra_enabled
 # ---------------------------------------------------------------------------
 inject_selinux "Moona Hoshinova ZRAM" \
-    '    ksu_allow(db, "kernel", "proc_page_cluster", "file", "read");\n\
-    ksu_allow(db, "kernel", "proc_page_cluster", "file", "write");\n\
-    ksu_allow(db, "kernel", "proc_page_cluster", "file", "open");\n\
-    ksu_allow(db, "kernel", "proc_page_cluster", "file", "getattr");\n\
-    ksu_allow(db, "kernel", "sysfs", "file", "write");\n'
+    '    ksu_allow(db, "kernel", "sysfs", "file", "write");\n'
 
 # ---------------------------------------------------------------------------
 # SuiKernel Manager Config Storage & Execution
@@ -180,11 +160,6 @@ inject_selinux "SuiKernel Manager Storage" \
     ksu_allow(db, "kernel", "system_file", "file", "open");\n\
     ksu_allow(db, "kernel", "system_file", "file", "getattr");\n\
     ksu_allow(db, "kernel", "system_file", "file", "map");\n\
-    ksu_allow(db, "kernel", "untrusted_app", "fd", "use");\n\
-    ksu_allow(db, "kernel", "untrusted_app", "fifo_file", "read");\n\
-    ksu_allow(db, "kernel", "untrusted_app", "fifo_file", "write");\n\
-    ksu_allow(db, "kernel", "untrusted_app", "fifo_file", "open");\n\
-    ksu_allow(db, "kernel", "untrusted_app", "fifo_file", "getattr");\n\
     ksu_allow(db, "kernel", "untrusted_app_all", "fd", "use");\n\
     ksu_allow(db, "kernel", "untrusted_app_all", "fifo_file", "read");\n\
     ksu_allow(db, "kernel", "untrusted_app_all", "fifo_file", "write");\n\
