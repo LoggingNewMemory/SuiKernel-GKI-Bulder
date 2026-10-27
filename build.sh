@@ -210,8 +210,6 @@ log "Cloning anykernel from $(simplify_gh_url "$ANYKERNEL_REPO")"
 git clone -q --depth=1 $ANYKERNEL_REPO -b $ANYKERNEL_BRANCH anykernel_base
 cd "$KSRC"
 
-mkdir -p $workdir/artifacts
-
 # Loop and build each mode
 for MODE in "${MODES[@]}"; do
     log "================================================="
@@ -238,8 +236,8 @@ for MODE in "${MODES[@]}"; do
     log "Building kernel..."
     make $BUILD_FLAGS Image modules
 
-    # Clean previous iteration artifact
-    rm -f "$workdir/artifacts/susfs_guard_lkm.ko"
+    # Clean previous iteration susfs module
+    rm -f "$workdir/susfs_guard_lkm.ko"
 
     # Locate built SUSFS LKM module, or compile explicitly if needed
     SUSFS_DIR=""
@@ -259,9 +257,8 @@ for MODE in "${MODES[@]}"; do
     if [[ -n "$SUSFS_KO" && -f "$SUSFS_KO" ]]; then
         log "Packaging SUSFS LKM: $SUSFS_KO"
         llvm-strip -d "$SUSFS_KO" || true
-        mkdir -p "$workdir/artifacts"
-        cp "$SUSFS_KO" "$workdir/artifacts/${CURRENT_KERNEL_RELEASE_NAME}_susfs_guard_lkm.ko"
-        cp "$SUSFS_KO" "$workdir/artifacts/susfs_guard_lkm.ko"
+        cp "$SUSFS_KO" "$workdir/${CURRENT_KERNEL_RELEASE_NAME}_susfs_guard_lkm.ko"
+        cp "$SUSFS_KO" "$workdir/susfs_guard_lkm.ko"
     else
         log "Warning: susfs_guard_lkm.ko not found!"
     fi
@@ -284,8 +281,8 @@ for MODE in "${MODES[@]}"; do
     cd anykernel
     log "Zipping anykernel ($MODE)..."
     cp $KERNEL_IMAGE .
-    if [[ -f "$workdir/artifacts/susfs_guard_lkm.ko" ]]; then
-      cp "$workdir/artifacts/susfs_guard_lkm.ko" .
+    if [[ -f "$workdir/susfs_guard_lkm.ko" ]]; then
+      cp "$workdir/susfs_guard_lkm.ko" .
     fi
     zip -r9 "$workdir/$ZIP_NAME" ./* >/dev/null
     cd $workdir
@@ -295,42 +292,22 @@ for MODE in "${MODES[@]}"; do
     BUILD_MINS=$((BUILD_DIFF / 60))
     BUILD_SECS=$((BUILD_DIFF % 60))
     BUILD_TIME_STR="${BUILD_MINS}m ${BUILD_SECS}s"
+    FINISHED_AT=$(date +"%H:%M:%S")
 
-    CAPTION=$(cat << CAPEOF
-Build Time: $BUILD_TIME_STR
+    CAPTION="Build Time: $BUILD_TIME_STR
+Finished At: $FINISHED_AT
 Build By: $RUNNER_NAME
 Variant: $CURRENT_VARIANT
-Kakangku: 100
-${MANAGER_VERSIONS}
-CAPEOF
-    )
-
-    if [[ $STATUS == "BETA" ]]; then
-      reply_file "$MESSAGE_ID" "$workdir/$ZIP_NAME" "$CAPTION"
-    else
-      mv "$workdir/$ZIP_NAME" "$workdir/artifacts/"
-      reply_file "$MESSAGE_ID" "$workdir/artifacts/$ZIP_NAME" "$CAPTION"
+Kakangku: 100"
+    if [[ -n "$MANAGER_VERSIONS" ]]; then
+      CAPTION="$CAPTION
+$MANAGER_VERSIONS"
     fi
+
+    reply_file "$MESSAGE_ID" "$workdir/$ZIP_NAME" "$CAPTION"
     
     cd "$KSRC"
 done
-
-# Save metadata for Github Actions release job
-if [[ $STATUS != "BETA" ]]; then
-  echo "BASE_NAME=$KERNEL_NAME-$VARIANT" >> $GITHUB_ENV
-  echo "BUILD_TIME=$BUILD_TIME_STR" >> $GITHUB_ENV
-  (
-    echo "LINUX_VERSION=$LINUX_VERSION"
-    echo "KSU_VERSION=${KSU_VERSION:-Vanilla}"
-    echo "ROOT_METHOD=$ROOT_METHOD"
-    echo "KERNEL_NAME=$KERNEL_NAME"
-    echo "RELEASE_REPO=$(simplify_gh_url "$GKI_RELEASES_REPO")"
-    echo "COMPILER_STRING=$COMPILER_STRING"
-    echo "SUSFS_VERSION=$SUSFS_VERSION"
-    echo "CLANG_VERSION=$CLANG_VERSION"
-    echo "MANAGER_VERSIONS_B64=$(echo "$MANAGER_VERSIONS" | base64 -w 0)"
-  ) >> $workdir/artifacts/info.txt
-fi
 
 # --- FETCH KERNELSU-NEXT MANAGER APKS ---
 if [[ "$VARIANT" == *"KernelSU-Next"* ]]; then
@@ -342,15 +319,8 @@ if [[ "$VARIANT" == *"KernelSU-Next"* ]]; then
     curl -sL "$M_URL" -o "$workdir/KernelSU-Next-Normal.apk"
     curl -sL "$S_URL" -o "$workdir/KernelSU-Next-Spoofed.apk"
     
-    if [[ $STATUS == "BETA" ]]; then
-      reply_file "$MESSAGE_ID" "$workdir/KernelSU-Next-Normal.apk" "KernelSU-Next Manager (Normal)"
-      reply_file "$MESSAGE_ID" "$workdir/KernelSU-Next-Spoofed.apk" "KernelSU-Next Manager (Spoofed)"
-    else
-      mv "$workdir/KernelSU-Next-Normal.apk" "$workdir/artifacts/"
-      mv "$workdir/KernelSU-Next-Spoofed.apk" "$workdir/artifacts/"
-      reply_file "$MESSAGE_ID" "$workdir/artifacts/KernelSU-Next-Normal.apk" "KernelSU-Next Manager (Normal)"
-      reply_file "$MESSAGE_ID" "$workdir/artifacts/KernelSU-Next-Spoofed.apk" "KernelSU-Next Manager (Spoofed)"
-    fi
+    reply_file "$MESSAGE_ID" "$workdir/KernelSU-Next-Normal.apk" "KernelSU-Next Manager (Normal)"
+    reply_file "$MESSAGE_ID" "$workdir/KernelSU-Next-Spoofed.apk" "KernelSU-Next Manager (Spoofed)"
   else
     log "Failed to fetch Manager APKs from official releases API"
   fi
@@ -361,8 +331,8 @@ log "Build script finished. Sending build log..."
 LOG_NAME="BuildLog-${VARIANT:-Unknown}.log"
 cp "$workdir/build.log" "$workdir/$LOG_NAME"
 if [[ -n $MESSAGE_ID ]]; then
-  reply_file "$MESSAGE_ID" "$workdir/$LOG_NAME" "Build Log (Success)"
+  reply_file "$MESSAGE_ID" "$workdir/$LOG_NAME" "Build Succeeded"
 else
-  upload_file "$workdir/$LOG_NAME"
+  upload_file "$workdir/$LOG_NAME" "Build Succeeded"
 fi
 

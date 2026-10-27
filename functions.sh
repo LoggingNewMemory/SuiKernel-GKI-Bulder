@@ -5,17 +5,26 @@
 # ==============
 
 # Telegram functions
-# upload_file <path/to/file>
+# upload_file <path/to/file> [caption]
 upload_file() {
   local FILE="$1"
+  local CAPTION="$2"
   if ! [[ -f $FILE ]]; then
     error "file $FILE doesn't exist"
   fi
   chmod 777 $FILE
-  curl -s -F document=@"$FILE" "https://api.telegram.org/bot$TG_BOT_TOKEN/sendDocument" \
-    -F "chat_id=$TG_CHAT_ID" \
-    -F "disable_web_page_preview=true" \
-    -F "parse_mode=markdown"
+  if [[ -n "$CAPTION" ]]; then
+    curl -s -F document=@"$FILE" "https://api.telegram.org/bot$TG_BOT_TOKEN/sendDocument" \
+      -F "chat_id=$TG_CHAT_ID" \
+      -F "caption=$CAPTION" \
+      -F "disable_web_page_preview=true" \
+      -F "parse_mode=markdown"
+  else
+    curl -s -F document=@"$FILE" "https://api.telegram.org/bot$TG_BOT_TOKEN/sendDocument" \
+      -F "chat_id=$TG_CHAT_ID" \
+      -F "disable_web_page_preview=true" \
+      -F "parse_mode=markdown"
+  fi
 }
 
 # reply_file <message_id> <path/to/file> [caption]
@@ -138,10 +147,10 @@ error() {
   cp "$workdir/build.log" "$workdir/$LOG_NAME"
   if [[ -n $MESSAGE_ID ]]; then
     reply_msg "$MESSAGE_ID" "ERROR: $*"
-    reply_file "$MESSAGE_ID" "$workdir/$LOG_NAME"
+    reply_file "$MESSAGE_ID" "$workdir/$LOG_NAME" "Build Failed"
   else
     send_msg "ERROR: $*"
-    upload_file "$workdir/$LOG_NAME"
+    upload_file "$workdir/$LOG_NAME" "Build Failed"
   fi
   exit 1
 }
