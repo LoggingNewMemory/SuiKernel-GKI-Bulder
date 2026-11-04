@@ -30,62 +30,40 @@ inject_selinux() {
 }
 
 # ---------------------------------------------------------------------------
-# Tenebrion — allow kernel to read screen state
+# Tenebrion — allow kernel to read screen and backlight state
 # ---------------------------------------------------------------------------
 inject_selinux "Tenebrion" \
     '    ksu_allow(db, "kernel", "sysfs_leds", "dir", "search");\n\
-    ksu_allow(db, "kernel", "sysfs_leds", "dir", "getattr");\n\
     ksu_allow(db, "kernel", "sysfs_leds", "file", "read");\n\
     ksu_allow(db, "kernel", "sysfs_leds", "file", "open");\n\
     ksu_allow(db, "kernel", "sysfs_leds", "file", "getattr");\n\
     ksu_allow(db, "kernel", "sysfs_backlight", "dir", "search");\n\
-    ksu_allow(db, "kernel", "sysfs_backlight", "dir", "getattr");\n\
     ksu_allow(db, "kernel", "sysfs_backlight", "file", "read");\n\
     ksu_allow(db, "kernel", "sysfs_backlight", "file", "open");\n\
     ksu_allow(db, "kernel", "sysfs_backlight", "file", "getattr");\n\
     ksu_allow(db, "kernel", "sysfs_drm", "dir", "search");\n\
-    ksu_allow(db, "kernel", "sysfs_drm", "dir", "getattr");\n\
     ksu_allow(db, "kernel", "sysfs_drm", "file", "read");\n\
     ksu_allow(db, "kernel", "sysfs_drm", "file", "open");\n\
     ksu_allow(db, "kernel", "sysfs_drm", "file", "getattr");\n\
-    ksu_allow(db, "kernel", "sysfs_type", "dir", "search");\n\
-    ksu_allow(db, "kernel", "sysfs_type", "dir", "getattr");\n\
-    ksu_allow(db, "kernel", "sysfs_type", "file", "read");\n\
-    ksu_allow(db, "kernel", "sysfs_type", "file", "open");\n\
-    ksu_allow(db, "kernel", "sysfs_type", "file", "getattr");\n\
     ksu_allow(db, "kernel", "sysfs", "dir", "search");\n\
-    ksu_allow(db, "kernel", "sysfs", "dir", "getattr");\n\
     ksu_allow(db, "kernel", "sysfs", "file", "read");\n\
     ksu_allow(db, "kernel", "sysfs", "file", "open");\n\
     ksu_allow(db, "kernel", "sysfs", "file", "getattr");\n'
 
 # ---------------------------------------------------------------------------
-# NTSYNC — Allow kernel background worker to auto-chmod and spoof as gpu_device
-#          Explicitly allow Winlator to RW the spoofed device
+# NTSYNC — Allow kernel worker to relabel device node
 # ---------------------------------------------------------------------------
 inject_selinux "NTSYNC" \
     '    ksu_allow(db, "kernel", "device", "chr_file", "setattr");\n\
     ksu_allow(db, "kernel", "device", "chr_file", "relabelfrom");\n\
     ksu_allow(db, "kernel", "gpu_device", "chr_file", "relabelto");\n\
-    ksu_allow(db, "kernel", "gpu_device", "chr_file", "setattr");\n\
-    ksu_allow(db, "untrusted_app", "gpu_device", "chr_file", "read");\n\
-    ksu_allow(db, "untrusted_app", "gpu_device", "chr_file", "write");\n\
-    ksu_allow(db, "untrusted_app", "gpu_device", "chr_file", "open");\n\
-    ksu_allow(db, "untrusted_app", "gpu_device", "chr_file", "ioctl");\n\
-    ksu_allow(db, "untrusted_app", "gpu_device", "chr_file", "map");\n'
-
-# ---------------------------------------------------------------------------
-# Ochinai Inaho Audio — dac_override
-# ---------------------------------------------------------------------------
-inject_selinux "Ochinai Inaho Audio" \
-    '    ksu_allow(db, "kernel", "kernel", "capability", "dac_override");\n'
+    ksu_allow(db, "kernel", "gpu_device", "chr_file", "setattr");\n'
 
 # ---------------------------------------------------------------------------
 # Airani Iofifteen CPUSet — cpuset read/write
 # ---------------------------------------------------------------------------
 inject_selinux "Airani Iofifteen CPUSet" \
-    '    ksu_allow(db, "kernel", "kernel", "capability", "dac_read_search");\n\
-    ksu_allow(db, "kernel", "cgroup", "dir", "search");\n\
+    '    ksu_allow(db, "kernel", "cgroup", "dir", "search");\n\
     ksu_allow(db, "kernel", "cgroup", "dir", "write");\n\
     ksu_allow(db, "kernel", "cgroup", "dir", "getattr");\n\
     ksu_allow(db, "kernel", "cgroup", "file", "getattr");\n\
@@ -102,7 +80,7 @@ inject_selinux "Schedutil Enforcer" \
     ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "file", "read");\n\
     ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "file", "write");\n\
     ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "file", "open");\n\
-    ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "file", "getattr");\n' 
+    ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "file", "getattr");\n'
 
 # ---------------------------------------------------------------------------
 # Moona Hoshinova ZRAM — allow kernel to write vma_ra_enabled
