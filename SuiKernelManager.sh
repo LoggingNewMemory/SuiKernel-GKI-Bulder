@@ -37,7 +37,7 @@ APK_SIGN       = os.path.join(base_dir, "apk_sign.c")
 MANAGER_ID     = os.path.join(base_dir, "manager_identity.h")
 THRONE_TRACKER = os.path.join(base_dir, "throne_tracker.c")
 
-SUI_PKG     = "kanagawa.yamada.suikernel.manager"
+SUI_PKG     = "kana.wesley.yamada.suikernel.manager"
 SUI_PKG_LEN = str(len(SUI_PKG))
 
 def read(path):
