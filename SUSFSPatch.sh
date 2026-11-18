@@ -21,6 +21,16 @@ if [ -n "$KBUILD_FILE" ]; then
         log "Hooking susfs/ into $KBUILD_FILE..."
         printf "\nobj-\$(CONFIG_KSU) += susfs/\n" >> "$KBUILD_FILE"
     fi
+
+    # Fix HooKern include path for out-of-tree builds (O=out)
+    SUSFS_MAKEFILE="$(dirname "$KBUILD_FILE")/susfs/Makefile"
+    if [ -f "$SUSFS_MAKEFILE" ]; then
+        if ! grep -q "srctree.*HooKern" "$SUSFS_MAKEFILE"; then
+            log "Fixing HooKern include path in $SUSFS_MAKEFILE for out-of-tree builds..."
+            sed -i 's|-I\$(src)/HooKern|-I$(src)/HooKern -I$(srctree)/$(src)/HooKern|g' "$SUSFS_MAKEFILE"
+        fi
+    fi
+
     log "SUSFS LKM integrated successfully!"
 else
     log "Warning: SUSFS LKM directory not found in KernelSU-Next."
