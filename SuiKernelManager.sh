@@ -269,9 +269,77 @@ patch(
 )
 
 # 3d. In track_throne(): validate and invalidate both manager UIDs independently
-patch(
-    THRONE_TRACKER,
-    target = r"""	// first, check if manager_uid exist!
+target_3d_new = r"""	// first, check if manager_uid exist!
+	uid_t manager_package_uid = KSU_INVALID_APPID;
+	bool need_rescan = false;
+	list_for_each_entry (np, &uid_list, list) {
+#ifdef KSU_MANAGER_PACKAGE
+		if (strcmp(np->package, KSU_MANAGER_PACKAGE) == 0) {
+			manager_package_uid = np->uid;
+			break;
+		}
+#else
+		if (np->uid == ksu_get_manager_appid()) {
+			manager_package_uid = np->uid;
+			break;
+		}
+#endif
+	}
+
+	if (manager_package_uid == KSU_INVALID_APPID) {
+		cached_manager_apk_path[0] = 0;
+		if (ksu_is_manager_appid_valid()) {
+			pr_info("manager is uninstalled, invalidate it!\n");
+			ksu_invalidate_manager_uid();
+			// Do not return here: replacing a manager uninstalls the old
+			// package and installs the new one, and a single packages.list
+			// update can carry both. Returning would leave the replacement
+			// uncrowned until some later package event or a reboot, and the
+			// rescan below is exactly where an unpinned kernel finds it.
+		}
+#ifndef KSU_MANAGER_PACKAGE
+		// Unpinned: package name unknown; rescan to find it
+		need_rescan = true;
+#endif
+	} else {
+		if (!ksu_is_manager_appid_valid()) {
+			need_rescan = true;
+		} else if (unlikely(np->uid != ksu_get_manager_appid())) {
+			// this should not happen in normal android system
+			pr_info("manager uid changed, invalidate it!\n");
+			cached_manager_apk_path[0] = 0;
+			ksu_invalidate_manager_uid();
+			need_rescan = true;
+		} else {
+			// uid unchanged, skip
+			pr_info("manager uid unchanged, skip search!\n");
+		}
+	}
+
+	if (need_rescan) {
+		// If the apk path still exists, the verification result won't be changed
+		if (cached_manager_apk_path[0]) {
+			struct path p;
+			int ret = kern_path(cached_manager_apk_path, 0, &p);
+			if (ret == 0) {
+				// skip search
+				pr_info("manager apk path unchanged, skip search!\n");
+				path_put(&p);
+				goto prune;
+			} else if (ret != -ENOENT) {
+				pr_err("stat cached manager path failed: %d (path=%s)\n", ret, cached_manager_apk_path);
+			}
+		}
+#ifdef KSU_MANAGER_PACKAGE
+		pr_info("Searching manager " KSU_MANAGER_PACKAGE "...\n");
+#else
+		pr_info("Searching manager...\n");
+#endif
+		search_manager("/data/app", 2, &uid_list);
+		pr_info("Search manager finished\n");
+	}"""
+
+target_3d_old = r"""	// first, check if manager_uid exist!
 	uid_t manager_package_uid = KSU_INVALID_APPID;
 	bool need_rescan = false;
 	list_for_each_entry (np, &uid_list, list) {
@@ -335,7 +403,11 @@ patch(
 #endif
 		search_manager("/data/app", 2, &uid_list);
 		pr_info("Search manager finished\n");
-	}""",
+	}"""
+
+patch(
+    THRONE_TRACKER,
+    target = target_3d_new if target_3d_new in read(THRONE_TRACKER) else target_3d_old,
     replacement = """	// first, check if manager_uid exist! (both official and SuiKernel)
 	uid_t manager_package_uid = KSU_INVALID_APPID;
 	uid_t sui_manager_package_uid = KSU_INVALID_APPID;

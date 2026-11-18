@@ -6,6 +6,8 @@
 
 if [[ -f "drivers/kernelsu/selinux/rules.c" ]]; then
     SELINUX_RULES_C="drivers/kernelsu/selinux/rules.c"
+elif [[ -f "drivers/KanaKSUCore/selinux/rules.c" ]]; then
+    SELINUX_RULES_C="drivers/KanaKSUCore/selinux/rules.c"
 elif [[ -f "drivers/YamadaKSUCore/selinux/rules.c" ]]; then
     SELINUX_RULES_C="drivers/YamadaKSUCore/selinux/rules.c"
 else
@@ -72,9 +74,9 @@ inject_selinux "Airani Iofifteen CPUSet" \
     ksu_allow(db, "kernel", "cgroup", "file", "open");\n'
 
 # ---------------------------------------------------------------------------
-# Schedutil Enforcer — allow kernel to write to cpufreq policy nodes
+# Governor Enforcer — allow kernel to write to cpufreq policy nodes
 # ---------------------------------------------------------------------------
-inject_selinux "Schedutil Enforcer" \
+inject_selinux "Governor Enforcer" \
     '    ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "dir", "search");\n\
     ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "dir", "getattr");\n\
     ksu_allow(db, "kernel", "sysfs_devices_system_cpu", "file", "read");\n\
